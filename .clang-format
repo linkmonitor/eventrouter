@@ -1,0 +1,7 @@
+BasedOnStyle: Google 
+AlignConsecutiveAssignments: true
+AlignConsecutiveMacros: true
+AllowShortFunctionsOnASingleLine: InlineOnly
+BreakBeforeBraces: Allman
+IndentWidth: 4
+IncludeBlocks: Preserve

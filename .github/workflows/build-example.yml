@@ -1,0 +1,28 @@
+name: Example Application
+
+on:
+  pull_request:
+    branches: [main]
+
+# Cancel in-progress workflows from the same pull-request branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_example:
+    name: "Build Example Application"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v3
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
+      - name: Configure Build
+        working-directory: example
+        run: |
+          cmake -B build -S . -G Ninja
+      - name: Build Application
+        working-directory: example
+        run: |
+          cmake --build build
