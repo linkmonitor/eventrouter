@@ -1,9 +1,9 @@
 #ifndef EVENTROUTER_EVENT_H
 #define EVENTROUTER_EVENT_H
 
-#include <stdatomic.h>
 #include <stdbool.h>
 
+#include "eventrouter/atomic.h"
 #include "eventrouter/checked_config.h"
 #include "eventrouter/module_id.h"
 
