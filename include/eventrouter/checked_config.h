@@ -22,9 +22,11 @@
 /// `ER_EVENT_TYPE__ENTRIES` must be an X-macro that defines a list of entries.
 /// The following is an example of a valid definition:
 ///
-///     #define ER_EVENT_TYPE__ENTRIES \
-///         X(ER_EVENT_TYPE__A)       \
-///         X(ER_EVENT_TYPE__B)       \
+///     // NOTE: There should be backslashes at the end of these lines but it
+///     // triggers a warning about multi-line comments.
+///     #define ER_EVENT_TYPE__ENTRIES
+///         X(ER_EVENT_TYPE__A)
+///         X(ER_EVENT_TYPE__B)
 ///         X(ER_EVENT_TYPE__C)
 ///
 /// Clients MUST NOT define entries with hardcoded integer values, like
