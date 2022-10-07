@@ -204,7 +204,7 @@ static void AssertOptionsAreValid(const ErOptions_t *a_options)
     // 1. Have a queue to deliver events to;
     // 2. Have a valid task handle; and
     // 3. Claim ownership over a valid range of modules.
-    ErModuleId_t previous_tasks_last_id;
+    ErModuleId_t previous_tasks_last_id = 0;
     for (size_t idx = 0; idx < a_options->m_num_tasks; ++idx)
     {
         const ErTaskDesc_t *task = &a_options->m_tasks[idx];
