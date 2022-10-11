@@ -5,8 +5,7 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 
-#include "eventrouter/event.h"
-#include "eventrouter/eventrouter.h"
+#include "eventrouter.h"
 
 void GenericTask_Run(void *a_parameters)
 {

@@ -1,10 +1,11 @@
 #ifndef MODULE_DATA_LOGGER_H
 #define MODULE_DATA_LOGGER_H
 
-#include "eventrouter/event_handler.h"
-#include "eventrouter/module_id.h"
+#include "eventrouter.h"
 
-void DataLogger_Init(ErModuleId_t a_id);
+void DataLogger_Init(void);
 ErEventHandlerRet_t DataLogger_EventHandler(ErEvent_t* a_event);
+
+extern ErModule_t g_data_logger_module;
 
 #endif /* MODULE_DATA_LOGGER_H */

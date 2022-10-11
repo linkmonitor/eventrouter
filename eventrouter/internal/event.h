@@ -3,44 +3,24 @@
 
 #include <stdbool.h>
 
-#include "eventrouter/atomic.h"
-#include "eventrouter/checked_config.h"
-#include "eventrouter/module_id.h"
+#include "atomic.h"
+#include "event_type.h"
+#include "module.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-    // clang-format off
-    typedef enum
-    {
-        /// This entry denotes an invalid event AND makes the first entry in
-        /// ER_EVENT_TYPE__ENTRIES() equal ER_EVENT_TYPE__OFFSET.
-        ER_EVENT_TYPE__INVALID = (ER_EVENT_TYPE__OFFSET - 1),
-
-#define X(entry) entry,
-        ER_EVENT_TYPE__ENTRIES
-#undef X
-
-        /// This entry provides a value from which we can derive *__COUNT and
-        /// *__LAST below; it follows the last user-provided entry.
-        ER_EVENT_TYPE__SENTINEL,
-        ER_EVENT_TYPE__COUNT = ER_EVENT_TYPE__SENTINEL - ER_EVENT_TYPE__OFFSET,
-        ER_EVENT_TYPE__FIRST = ER_EVENT_TYPE__OFFSET,
-        ER_EVENT_TYPE__LAST  = ER_EVENT_TYPE__SENTINEL - 1,
-    } ErEventType_t;
-    // clang-format on
-
     /// Contains the fields the Event Router needs to route events and manage
     /// subscriptions. New event structures must contain an `ErEvent_t` member
     /// whose name matches the expansion of `ER_EVENT_MEMBER`. This is most
     /// easily accomplished using `MIXIN_ER_EVENT`.
-    typedef struct
+    typedef struct ErEvent_t
     {
         ErEventType_t m_type;
         atomic_int m_reference_count;
-        ErModuleId_t m_sending_module;
+        ErModule_t *m_sending_module;
     } ErEvent_t;
 
     /// Returns true if the event is in the process of being delivered to
@@ -52,11 +32,11 @@ extern "C"
 
     /// Initializes an `ErEvent_t` struct.
     static inline void ErEventInit(ErEvent_t *a_event, ErEventType_t a_type,
-                                   ErModuleId_t a_id)
+                                   ErModule_t *a_module)
     {
         a_event->m_type            = a_type;
         a_event->m_reference_count = 0;
-        a_event->m_sending_module  = a_id;
+        a_event->m_sending_module  = a_module;
     }
 
     /// Add this to the top-level of a struct definition to make values of that
@@ -95,8 +75,8 @@ extern "C"
     /// Initialize the event fields of a struct which mixes-in `ErEvent_t`
     /// behavior. This differs from `ErEventInit_t` in that it can be used in
     /// static definitions using designated initializers.
-#define INIT_ER_EVENT(a_type, a_id) \
-    .ER_EVENT_MEMBER = {.m_type = a_type, .m_sending_module = a_id}
+#define INIT_ER_EVENT(a_type, a_module) \
+    .ER_EVENT_MEMBER = {.m_type = a_type, .m_sending_module = a_module}
 
 #ifdef __cplusplus
 }

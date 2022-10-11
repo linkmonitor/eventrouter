@@ -4,9 +4,7 @@
 /// This module periodically publishes instances of SensorDataEvent_t. Subscribe
 /// to ER_EVENT_TYPE__SENSOR_DATA to receive it.
 
-#include "eventrouter/event.h"
-#include "eventrouter/event_handler.h"
-#include "eventrouter/module_id.h"
+#include "eventrouter.h"
 
 typedef struct
 {
@@ -15,7 +13,9 @@ typedef struct
     int m_lux;
 } SensorDataEvent_t;
 
-void SensorDataPublisher_Init(ErModuleId_t a_id);
+void SensorDataPublisher_Init();
 ErEventHandlerRet_t SensorDataPublisher_EventHandler(ErEvent_t* a_event);
+
+extern ErModule_t g_sensor_data_publisher_module;
 
 #endif /* MODULE_SENSOR_DATA_PUBLISHER_H */

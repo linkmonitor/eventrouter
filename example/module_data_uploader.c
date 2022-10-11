@@ -2,15 +2,14 @@
 
 #include <stdio.h>
 
+#include "eventrouter.h"
 #include "module_sensor_data_publisher.h"
 
-#include "eventrouter/event.h"
-#include "eventrouter/event_handler.h"
-#include "eventrouter/eventrouter.h"
+ErModule_t g_data_uploader_module = ER_CREATE_MODULE(DataUploader_EventHandler);
 
-void DataUploader_Init(ErModuleId_t a_id)
+void DataUploader_Init(void)
 {
-    ErSubscribe(a_id, ER_EVENT_TYPE__SENSOR_DATA);
+    ErSubscribe(&g_data_uploader_module, ER_EVENT_TYPE__SENSOR_DATA);
 }
 
 ErEventHandlerRet_t DataUploader_EventHandler(ErEvent_t *a_event)
