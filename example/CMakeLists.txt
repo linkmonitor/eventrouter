@@ -23,7 +23,7 @@ target_link_options(freertos_kernel PUBLIC
 )
 
 add_library(eventrouter STATIC ../eventrouter.c)
-target_include_directories(eventrouter PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+target_include_directories(eventrouter PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
 target_link_libraries(eventrouter PUBLIC freertos_kernel)
 
 add_library(task_generic STATIC task_generic.c)

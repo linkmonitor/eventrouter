@@ -7,11 +7,14 @@
 #include "FreeRTOS.h"
 #include "timers.h"
 
-#include "eventrouter/event.h"
-#include "eventrouter/event_handler.h"
-#include "eventrouter/eventrouter.h"
+#include "eventrouter.h"
 
-static SensorDataEvent_t s_event;
+ErModule_t g_sensor_data_publisher_module =
+    ER_CREATE_MODULE(SensorDataPublisher_EventHandler);
+
+static SensorDataEvent_t s_event = {
+    INIT_ER_EVENT(ER_EVENT_TYPE__SENSOR_DATA, &g_sensor_data_publisher_module),
+};
 
 static void TimerCallback(TimerHandle_t a_timer)
 {
@@ -25,11 +28,8 @@ static void TimerCallback(TimerHandle_t a_timer)
     }
 }
 
-void SensorDataPublisher_Init(ErModuleId_t a_id)
+void SensorDataPublisher_Init(void)
 {
-    s_event.m_event.m_type           = ER_EVENT_TYPE__SENSOR_DATA;
-    s_event.m_event.m_sending_module = a_id;
-
     srand(time(NULL));
 
     const int kPublishPeriodSeconds = 2;

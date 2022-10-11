@@ -16,36 +16,14 @@
 /// a subscription metaphor. Modules can subscribe to event types or unsubscribe
 /// from them at any time using `ErSubscribe()` and its counterpart.
 
-#include "FreeRTOS.h"
-#include "queue.h"
-#include "task.h"
-
-#include "eventrouter/event.h"
-#include "eventrouter/event_handler.h"
-#include "eventrouter/module_id.h"
+#include "eventrouter/internal/event.h"
+#include "eventrouter/internal/module.h"
+#include "eventrouter/internal/task_.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-    /// Stores task attributes the Event Router is interested in.
-    typedef struct
-    {
-        /// `ErInit_t` functions accept a task-ordered list of
-        /// modules. The `m_first_module` and `m_last_module` are the IDs of the
-        /// first and last entries in that list which should run in this task.
-        /// See the relevant comments in `ErOptions_t` for more info.
-        ErModuleId_t m_first_module;
-        ErModuleId_t m_last_module;
-
-        /// The queue that this task will draw `ErEvent_t*` entries from.
-        QueueHandle_t m_event_queue;
-
-        /// Used by some event router functions to check which task they are
-        /// being called from.
-        TaskHandle_t m_task_handle;
-    } ErTaskDesc_t;
 
     /// These parameters define how an instance of the event router behaves. Any
     /// instance of this struct which is passed to a `ErInit_t`
@@ -53,58 +31,13 @@ extern "C"
     typedef struct
     {
         /// These fields list all tasks that can participate in event routing.
-        /// The tasks should be listed from highest priority to lowest. All
-        /// tasks must contain at least one module and have a non-NULL queue.
-        const ErTaskDesc_t *m_tasks;
+        /// The tasks should be listed from highest priority to lowest.
+        const ErTask_t *m_tasks;
         size_t m_num_tasks;
 
-        /// These fields define a "task-ordered" list of non-NULL event
-        /// handlers. This means that the event handlers in this list should be
-        /// grouped according to which tasks "owns" them.
-        ///
-        ///            Task List           Event Handler List
-        ///            ┌───────┐     ┌─────▶┌─────────────┐
-        ///            │       │─────┤      ├─────────────┤
-        ///            └───────┘     └─────▶└─────────────┘
-        ///                          ┌─────▶┌─────────────┐
-        ///            ┌───────┐     │      ├─────────────┤
-        ///            │       │─────┤      ├─────────────┤
-        ///            └───────┘     │      ├─────────────┤
-        ///                          └─────▶└─────────────┘
-        ///            ┌───────┐     ┌─────▶┌─────────────┐
-        ///            │       │─────┤      ├─────────────┤
-        ///            └───────┘     └─────▶└─────────────┘
-        ///
-        /// Said differently, the first N event handlers belong to Task 1. The
-        /// next M event handlers belong to Task 2, and so on.
-        const ErEventHandler_t *m_event_handlers;
-        size_t m_num_event_handlers;
-
-        /// The values for all routable event types must form an integer range
-        /// without gaps. E.g. if there are 20 event types and they start at 17,
-        /// then every number from 17 up-to-and-including 36 must be a valid
-        /// event type.
-        size_t m_first_event_type;
-        size_t m_num_event_types;
-
-        /// System-specific functions which the Event Router needs to function.
-        struct
-        {
-            /// Returns true if the current execution context is an interrupt
-            /// service routine. This field is required.
-            bool (*m_IsInIsr)(void);
-
-            /// Provides diagnostic information in case of a failure. This field
-            /// is optional and may be left NULL.
-            void (*m_LogError)(const char *a_format, ...);
-
-            /// These functions should behave like their standard library
-            /// counterparts if specified. If omitted (set to NULL) the standard
-            /// library counterpart will take their place.
-            void *(*m_Malloc)(size_t a_size);
-            void (*m_Free)(void *a_block);
-        } m_system_funcs;
-
+        /// Returns true if the current execution context is an interrupt
+        /// service routine.
+        bool (*m_IsInIsr)(void);
     } ErOptions_t;
 
     /// Initializes the event router based on the options provided and must be
@@ -173,16 +106,16 @@ extern "C"
     /// module's event handler. Modules are not subscribed to any event types
     /// when the event router is initialized.
     ///
-    /// This function MUST be called from the task that owns the module with
-    /// `a_id`; it MUST NOT be called from an interrupt or a callback.
-    void ErSubscribe(ErModuleId_t a_id, ErEventType_t a_event_type);
+    /// This function MUST be called from the task that owns `a_module`; it MUST
+    /// NOT be called from an interrupt or a callback.
+    void ErSubscribe(ErModule_t *a_module, ErEventType_t a_event_type);
 
     /// Prevents the event router from delivering any events of `a_event_type`
     /// to this module's event handler.
     ///
-    /// This function MUST be called from the task that owns the module with
-    /// `a_id`; it MUST NOT be called from an interrupt or a callback.
-    void ErUnsubscribe(ErModuleId_t a_id, ErEventType_t a_event_type);
+    /// This function MUST be called from the task that owns `a_module`; it MUST
+    /// NOT be called from an interrupt or a callback.
+    void ErUnsubscribe(ErModule_t *a_module, ErEventType_t a_event_type);
 
 #ifdef __cplusplus
 }

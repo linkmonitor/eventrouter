@@ -12,6 +12,25 @@
 #define ER_ASSERT(condition) assert(condition)
 #endif
 
+/// Clients may provide their own static assertion macro. If they do not, the
+/// Event Router defaults to a language-dependent default.
+#ifndef ER_STATIC_ASSERT
+#include <assert.h>
+#if defined(static_assert) || defined(__cplusplus)
+#define ER_STATIC_ASSERT(cond, msg) static_assert(cond, msg)
+#else
+#if !defined(CAT) && !defined(CAT2)
+#define CAT2(x, y) x##y
+#define CAT(x, y)  CAT2(x, y)
+#endif
+#define ER_STATIC_ASSERT(cond, msg)                       \
+    enum                                                  \
+    {                                                     \
+        CAT(STATIC_ASSERT_, __COUNTER__) = 1 / (!!(cond)) \
+    }
+#endif
+#endif
+
 /// All values in `ErEventType_t` must be monotonically increasing without gaps
 /// but they do not have to start at 0. ER_EVENT_TYPE__OFFSET specifies the
 /// value of the first entry in `ER_EVENT_TYPE__ENTRIES` below.

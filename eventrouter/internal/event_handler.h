@@ -1,8 +1,6 @@
 #ifndef EVENTROUTER_EVENTHANDLER_H
 #define EVENTROUTER_EVENTHANDLER_H
 
-#include "eventrouter/event.h"
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -26,9 +24,12 @@ extern "C"
         ER_EVENT_HANDLER_RET__KEPT,
     } ErEventHandlerRet_t;
 
+    /// Forward declare ErEvent_t to break a header cycle.
+    struct ErEvent_t;
+
     /// A function which accepts events and returns qualitative information
     /// about how that event was received.
-    typedef ErEventHandlerRet_t (*ErEventHandler_t)(ErEvent_t *a_event);
+    typedef ErEventHandlerRet_t (*ErEventHandler_t)(struct ErEvent_t *a_event);
 
 #ifdef __cplusplus
 }

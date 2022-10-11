@@ -1,5 +1,5 @@
-#ifndef EVENTROUTER_EVENTROUTER_INTERNAL_H
-#define EVENTROUTER_EVENTROUTER_INTERNAL_H
+#ifndef EVENTROUTER_RTOS_FUNCTIONS_H
+#define EVENTROUTER_RTOS_FUNCTIONS_H
 
 #include "FreeRTOS.h"
 #include "queue.h"
@@ -14,7 +14,6 @@ extern "C"
     {
         void (*SendEvent)(QueueHandle_t a_queue, void *a_event);
         TaskHandle_t (*GetCurrentTaskHandle)(void);
-        void (*GetTaskInfo)(TaskHandle_t a_task, TaskStatus_t *a_status);
     } ErRtosFunctions_t;
 
     /// Overrides the RTOS functions used by this module. This makes testing
@@ -26,4 +25,4 @@ extern "C"
 }
 #endif
 
-#endif /* EVENTROUTER_EVENTROUTER_INTERNAL_H */
+#endif /* EVENTROUTER_RTOS_FUNCTIONS_H */
