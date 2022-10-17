@@ -32,7 +32,7 @@ extern "C"
     /// missing-field-initializers warnings.
 #define ER_CREATE_MODULE(a_handler)                                 \
     {                                                               \
-        .m_handler = a_handler, .m_module_idx = 0, .m_task_idx = 0, \
+        .m_handler = a_handler, .m_task_idx = 0, .m_module_idx = 0, \
         .m_subscriptions = {0},                                     \
     }
 
