@@ -5,6 +5,8 @@
 #include "eventrouter.h"
 #include "module_sensor_data_publisher.h"
 
+static ErEventHandlerRet_t DataLogger_EventHandler(ErEvent_t* a_event);
+
 ErModule_t g_data_logger_module = ER_CREATE_MODULE(DataLogger_EventHandler);
 
 void DataLogger_Init(void)
