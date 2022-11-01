@@ -5,9 +5,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "checked_config.h"
+
+#ifdef ER_FREERTOS
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
+#endif // ER_FREERTOS
 
 #include "event_type.h"
 #include "module.h"
@@ -19,11 +23,12 @@ extern "C"
     /// Represents a FreeRTOS task which participates in event routing.
     typedef struct
     {
+#ifdef ER_FREERTOS
         /// Used to identify the task some event router functions are called in.
         TaskHandle_t m_task_handle;
-
         /// The queue that this task draws `ErEvent_t*` entries from.
         QueueHandle_t m_event_queue;
+#endif // ER_FREERTOS
 
         /// The list of modules this task contains; multiple tasks MUST NOT
         /// contain the same module. Each task MUST contain at least one module.
