@@ -7,6 +7,10 @@
 #include "event_type.h"
 #include "module.h"
 
+#ifdef ER_BAREMETAL
+#include "list.h"
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -21,6 +25,9 @@ extern "C"
         ErEventType_t m_type;
         atomic_int m_reference_count;
         ErModule_t *m_sending_module;
+#ifdef ER_BAREMETAL
+        ErList_t m_next;
+#endif
     } ErEvent_t;
 
     /// Returns true if the event is in the process of being delivered to
