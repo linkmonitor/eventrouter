@@ -13,8 +13,8 @@ typedef struct
     int m_lux;
 } SensorDataEvent_t;
 
-void SensorDataPublisher_Init();
-ErEventHandlerRet_t SensorDataPublisher_EventHandler(ErEvent_t* a_event);
+void SensorDataPublisher_Init(void);
+void SensorDataPublisher_GenerateData();
 
 extern ErModule_t g_sensor_data_publisher_module;
 

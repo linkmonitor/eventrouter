@@ -4,10 +4,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "FreeRTOS.h"
-#include "timers.h"
-
 #include "eventrouter.h"
+
+static ErEventHandlerRet_t SensorDataPublisher_EventHandler(ErEvent_t *a_event);
 
 ErModule_t g_sensor_data_publisher_module =
     ER_CREATE_MODULE(SensorDataPublisher_EventHandler);
@@ -16,7 +15,7 @@ static SensorDataEvent_t s_event = {
     INIT_ER_EVENT(ER_EVENT_TYPE__SENSOR_DATA, &g_sensor_data_publisher_module),
 };
 
-static void TimerCallback(TimerHandle_t a_timer)
+void SensorDataPublisher_GenerateData()
 {
     if (!ErEventIsInFlight(&s_event.m_event))
     {
@@ -31,13 +30,6 @@ static void TimerCallback(TimerHandle_t a_timer)
 void SensorDataPublisher_Init(void)
 {
     srand(time(NULL));
-
-    const int kPublishPeriodSeconds = 2;
-    TimerHandle_t timer =
-        xTimerCreate("Sensor Data Publish Timer",
-                     (configTICK_RATE_HZ * kPublishPeriodSeconds), pdTRUE, NULL,
-                     TimerCallback);
-    xTimerStart(timer, 0);
 }
 
 ErEventHandlerRet_t SensorDataPublisher_EventHandler(ErEvent_t *a_event)
