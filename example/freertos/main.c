@@ -3,6 +3,7 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
+#include "timers.h"
 
 #include "eventrouter.h"
 #include "module_data_logger.h"
@@ -103,6 +104,17 @@ int main(void)
     DataLogger_Init();
     DataUploader_Init();
     SensorDataPublisher_Init();
+
+    //==========================================================================
+    // Start polling timer.
+    //==========================================================================
+
+    const int kPublishPeriodSeconds = 2;
+    TimerHandle_t timer =
+        xTimerCreate("Sensor Data Publish Timer",
+                     (configTICK_RATE_HZ * kPublishPeriodSeconds), pdTRUE, NULL,
+                     SensorDataPublisher_GenerateData);
+    xTimerStart(timer, 0);
 
     //==========================================================================
     // Start Scheduler
