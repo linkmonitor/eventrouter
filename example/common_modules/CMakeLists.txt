@@ -1,0 +1,17 @@
+add_library(module_sensor_data_publisher STATIC module_sensor_data_publisher.c)
+target_link_libraries(module_sensor_data_publisher PUBLIC eventrouter)
+target_include_directories(module_sensor_data_publisher PUBLIC .)
+
+add_library(module_data_logger STATIC module_data_logger.c)
+target_link_libraries(module_data_logger PUBLIC
+  eventrouter
+  module_sensor_data_publisher
+)
+target_include_directories(module_data_logger PUBLIC .)
+
+add_library(module_data_uploader STATIC module_data_uploader.c)
+target_link_libraries(module_data_uploader PUBLIC
+  eventrouter
+  module_sensor_data_publisher
+)
+target_include_directories(module_data_uploader PUBLIC .)

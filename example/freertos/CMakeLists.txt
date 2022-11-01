@@ -22,27 +22,15 @@ target_link_options(freertos_kernel PUBLIC
   $<$<PLATFORM_ID:Linux>:-pthread>
 )
 
-add_library(eventrouter STATIC ../eventrouter.c)
-target_include_directories(eventrouter PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
+add_library(eventrouter STATIC ../../eventrouter.c)
+target_include_directories(eventrouter PUBLIC ../..)
 target_link_libraries(eventrouter PUBLIC freertos_kernel)
+
+# Pull in the eventrouter modules which are common to all examples.
+add_subdirectory(../common_modules common_modules)
 
 add_library(task_generic STATIC task_generic.c)
 target_link_libraries(task_generic PUBLIC eventrouter)
-
-add_library(module_sensor_data_publisher STATIC module_sensor_data_publisher.c)
-target_link_libraries(module_sensor_data_publisher PUBLIC eventrouter)
-
-add_library(module_data_logger STATIC module_data_logger.c)
-target_link_libraries(module_data_logger PUBLIC
-  eventrouter
-  module_sensor_data_publisher
-)
-
-add_library(module_data_uploader STATIC module_data_uploader.c)
-target_link_libraries(module_data_uploader PUBLIC
-  eventrouter
-  module_sensor_data_publisher
-)
 
 add_executable(main main.c)
 target_link_libraries(main PRIVATE
