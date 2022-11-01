@@ -31,6 +31,17 @@
 #endif
 #endif
 
+/// Default to the FreeRTOS implementation. Clients may specify ER_BAREMETAL in
+/// their eventrouter_config.h and then build without FreeRTOS.
+#if !defined(ER_FREERTOS) && !defined(ER_BAREMETAL)
+#define ER_FREERTOS
+#endif
+
+/// Sanity check the implementation definitions.
+#if defined(ER_FREERTOS) && defined(ER_BAREMETAL)
+ER_STATIC_ASSERT(0, "Only one of ER_FREERTOS and ER_BAREMETAL may be defined");
+#endif
+
 /// All values in `ErEventType_t` must be monotonically increasing without gaps
 /// but they do not have to start at 0. ER_EVENT_TYPE__OFFSET specifies the
 /// value of the first entry in `ER_EVENT_TYPE__ENTRIES` below.

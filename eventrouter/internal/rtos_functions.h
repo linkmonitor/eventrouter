@@ -1,6 +1,12 @@
 #ifndef EVENTROUTER_RTOS_FUNCTIONS_H
 #define EVENTROUTER_RTOS_FUNCTIONS_H
 
+#include "checked_config.h"
+
+#ifndef ER_FREERTOS
+#error "These functions only work in the FreeRTOS implementation."
+#endif // ER_FREERTOS
+
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
