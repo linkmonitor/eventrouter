@@ -20,6 +20,11 @@
 #include "eventrouter/internal/module.h"
 #include "eventrouter/internal/task_.h"
 
+/// Extensions only available in the baremetal implementation.
+#ifdef ER_BAREMETAL
+#include "eventrouter/internal/eventrouter_baremetal.h"
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -63,6 +68,8 @@ extern "C"
     /// Customizes the behavior of `ErSendExtended()`.
     typedef struct
     {
+        /// NOTE: Only supported in the FreeRTOS implementation.
+        ///
         /// Permits re-sending an event that is already in flight (check with
         /// `ErEventIsInFlight()`). All subscribers receive the event one time
         /// for each time the event is sent and re-sent. The sending module

@@ -1,4 +1,4 @@
-name: Example Application
+name: Example Applications
 
 on:
   pull_request:
@@ -11,18 +11,20 @@ concurrency:
 
 jobs:
   build_example:
-    name: "Build Example Application"
+    name: "Build Example Applications"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Sources
         uses: actions/checkout@v3
       - name: Install Ninja
         uses: seanmiddleditch/gha-setup-ninja@master
-      - name: Configure Build
-        working-directory: example
+      - name: Build FreeRTOS Example
+        working-directory: example/freertos
         run: |
           cmake -B build -S . -G Ninja
-      - name: Build Application
-        working-directory: example
+          cmake --build build
+      - name: Build Baremetal Example
+        working-directory: example/baremetal
         run: |
+          cmake -B build -S . -G Ninja
           cmake --build build
