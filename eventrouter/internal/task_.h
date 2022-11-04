@@ -11,7 +11,7 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
-#endif // ER_FREERTOS
+#endif  // ER_FREERTOS
 
 #include "event_type.h"
 #include "module.h"
@@ -28,15 +28,15 @@ extern "C"
         TaskHandle_t m_task_handle;
         /// The queue that this task draws `ErEvent_t*` entries from.
         QueueHandle_t m_event_queue;
-#endif // ER_FREERTOS
+        /// A superset of all module subscriptions within the task.
+        uint8_t
+            m_subscriptions[(ER_EVENT_TYPE__COUNT + (CHAR_BIT - 1)) / CHAR_BIT];
+#endif  // ER_FREERTOS
 
         /// The list of modules this task contains; multiple tasks MUST NOT
         /// contain the same module. Each task MUST contain at least one module.
         ErModule_t **m_modules;
         size_t m_num_modules;
-
-        uint8_t
-            m_subscriptions[(ER_EVENT_TYPE__COUNT + (CHAR_BIT - 1)) / CHAR_BIT];
     } ErTask_t;
 
 #ifdef __cplusplus
