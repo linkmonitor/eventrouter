@@ -10,6 +10,7 @@
 #include "queue.h"
 #include "task.h"
 
+#include "bitref.h"
 #include "defs.h"
 #include "rtos_functions.h"
 
@@ -17,31 +18,12 @@
 /// the dispatch strategy in `ErSend()`.
 #define TASK_SEND_LIMIT (32)
 
-/// A reference to a specific bit within a `BitArray2D_t`.
-typedef struct
-{
-    atomic_char *m_byte;
-    uint8_t m_bit_mask;
-} BitRef_t;
-
 static struct
 {
     bool m_initialized;
     const ErOptions_t *m_options;
     ErRtosFunctions_t m_rtos_functions;
 } s_context;
-
-static BitRef_t GetBitRef(atomic_char *a_data, size_t a_bit)
-{
-    ER_STATIC_ASSERT(
-        sizeof(uint8_t) == sizeof(atomic_char),
-        "The Event Router must be able to access raw bytes atomically");
-
-    return (BitRef_t){
-        .m_byte     = &a_data[a_bit / CHAR_BIT],
-        .m_bit_mask = (1 << (a_bit % CHAR_BIT)),
-    };
-}
 
 static bool IsInIsr(void)
 {
