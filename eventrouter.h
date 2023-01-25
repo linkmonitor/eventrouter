@@ -37,7 +37,7 @@ extern "C"
     {
         /// These fields list all tasks that can participate in event routing.
         /// The tasks should be listed from highest priority to lowest.
-        const ErTask_t *m_tasks;
+        ErTask_t *m_tasks;
         size_t m_num_tasks;
 
         /// Returns true if the current execution context is an interrupt
@@ -102,11 +102,19 @@ extern "C"
     /// error.
     void ErCallHandlers(ErEvent_t *a_event);
 
-    /// If an event handler "keeps" and event, indicated by returning
-    /// `ER_EVENT_HANDLER_RET__KEPT`, they are responsible for calling this
-    /// function on the event when they are done with it. Said differently, the
-    /// event handler must call this function once if and only if it returns
-    /// `ER_EVENT_HANDLER_RET__KEPT`.
+    /// Returns an event which a module previously KEPT.
+    ///
+    /// Modules KEEP events by returning `ER_EVENT_HANDLER_RET__KEPT` from their
+    /// event handler. Keeping an event lets a module inspect the contents of
+    /// that event across multiple calls to their event handler. Normally,
+    /// modules lose access to an event after their event handler returns.
+    ///
+    /// When modules are done with an event they have previously KEPT, they must
+    /// call `ErReturnToSender()` on that event. This lets the sender reclaim
+    /// the resources for that event and reuse it. Modules MUST NOT call
+    /// `ErReturnToSender()` in the same handler call that they return
+    /// `ER_EVENT_HANDLER_RET__KEPT`; it corrupts the reference count achieves
+    /// the same thing as returning `ER_EVENT_HANDLER_RET__HANDLED` instead.
     void ErReturnToSender(ErEvent_t *a_event);
 
     /// Causes the event router to deliver all events of `a_event_type` to this
