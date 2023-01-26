@@ -407,7 +407,7 @@ void ErCallHandlers(ErEvent_t *a_event)
     }
 
     const size_t task_idx = GetIndexOfCurrentTask();
-    ErTask_t *task        = &s_context.m_options->m_tasks[task_idx];
+    const ErTask_t *task  = &s_context.m_options->m_tasks[task_idx];
 
     for (size_t module_idx = 0; module_idx < task->m_num_modules; ++module_idx)
     {
@@ -426,11 +426,8 @@ void ErCallHandlers(ErEvent_t *a_event)
 
         if (module_is_subscribed)
         {
-            // Deliver the event to the subscribed module and setup state to
-            // detect incorrect calls to `ErReturnToSender()` in the handler.
-            task->m_current_event         = a_event;
+            // Deliver the event to the subscribed module.
             const ErEventHandlerRet_t ret = module->m_handler(a_event);
-            task->m_current_event         = NULL;
 
             if (ret == ER_EVENT_HANDLER_RET__KEPT)
             {
@@ -457,22 +454,7 @@ void ErReturnToSender(ErEvent_t *a_event)
 
     const int previous_reference_count =
         atomic_fetch_sub(&a_event->m_reference_count, 1);
-    const int reference_count     = previous_reference_count - 1;
-    const size_t sending_task_idx = a_event->m_sending_module->m_task_idx;
-    const ErTask_t *sending_task =
-        &s_context.m_options->m_tasks[sending_task_idx];
-
-    // Clients should not call `ErReturnToSender()` on an event in the same
-    // handler call that they receive it; it messes up the reference count and
-    // they can do the same thing by returning `ER_EVENT_HANDLER_RET__HANDLED`.
-    //
-    // This constraint prevents subscribers from KEEPing events which are sent
-    // multiple times using `ErSendEx()`. Without this check a subscriber could
-    // receive an event which it had previously KEPT, return the previously KEPT
-    // copy, and then KEEP the new copy. I can't see how this flow could be
-    // useful and think that preventing incorrect calls to `ErReturnToSender()`
-    // is more useful.
-    ER_ASSERT(sending_task->m_current_event != a_event);
+    const int reference_count = previous_reference_count - 1;
 
     if (reference_count > 1)
     {
@@ -486,12 +468,15 @@ void ErReturnToSender(ErEvent_t *a_event)
         // All the recipient tasks are done with the event. We must return the
         // event to its sender.
 
+        const size_t sending_task_idx = a_event->m_sending_module->m_task_idx;
+
         // The sending task is different from the current task, so we need to
         // send it to that task's queue.
         if (sending_task_idx != GetIndexOfCurrentTask())
         {
-            s_context.m_rtos_functions.SendEvent(sending_task->m_event_queue,
-                                                 a_event);
+            s_context.m_rtos_functions.SendEvent(
+                s_context.m_options->m_tasks[sending_task_idx].m_event_queue,
+                a_event);
 
             // The `return` below is necessary to prevent double-delivery of
             // events to the sending module. The problematic case, without this

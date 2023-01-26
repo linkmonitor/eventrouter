@@ -13,7 +13,7 @@
 #include "task.h"
 #endif  // ER_FREERTOS
 
-#include "event.h"
+#include "event_type.h"
 #include "module.h"
 
 #ifdef __cplusplus
@@ -31,9 +31,6 @@ extern "C"
         /// A superset of all module subscriptions within the task.
         uint8_t
             m_subscriptions[(ER_EVENT_TYPE__COUNT + (CHAR_BIT - 1)) / CHAR_BIT];
-        /// The event that this task is currently handling. This is used to
-        /// detect incorrect uses of `ErReturnToSender()`.
-        ErEvent_t *m_current_event;
 #endif  // ER_FREERTOS
 
         /// The list of modules this task contains; multiple tasks MUST NOT
