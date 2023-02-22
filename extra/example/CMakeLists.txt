@@ -1,5 +1,8 @@
 #===============================================================================
 # Common Modules
+#
+# These modules are common to all example applications to demonstrate the
+# reusability of event-based code across eventrouter implementations.
 # ===============================================================================
 
 set(COMMON_MODULE_SOURCES # Related header files are directory-local.
@@ -9,7 +12,7 @@ set(COMMON_MODULE_SOURCES # Related header files are directory-local.
 )
 
 #===============================================================================
-# Baremetal
+# Baremetal: The simplest example application.
 # ===============================================================================
 
 add_executable(baremetal_eventrouter_example
