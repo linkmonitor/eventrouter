@@ -4,9 +4,9 @@ A C library for event-based inter-task communication in [FreeRTOS](https://www.f
 
 # Quickstart
 
-The `example/` application demonstrates how to define events, initialize the Event Router, publish events, and subscribe to them.
+The example applications demonstrate how to define events, initialize the Event Router, publish events, and subscribe to them.
 
-Developers who wish to use the Event Router must compile `eventrouter.c` (with a C11-compatible compiler) and add `<repo>/include` to their list of include paths.
+Developers who wish to use the Event Router must compile `eventrouter.c` (with a C11-compatible compiler) add `<repo>/include` to their list of include paths, and provide an `eventrouter_config.h`.
 
 # Overview
 
