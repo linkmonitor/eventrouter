@@ -1,3 +1,15 @@
+include(FetchContent)
+
+FetchContent_Declare(
+  freertos
+  GIT_REPOSITORY https://github.com/FreeRTOS/FreeRTOS-Kernel
+  GIT_TAG main
+)
+
+file(GENERATE
+  OUTPUT FreeRTOSConfig.h
+  CONTENT
+[[
 #ifndef FREERTOSCONFIG_H
 #define FREERTOSCONFIG_H
 
@@ -21,3 +33,18 @@
 #define configTIMER_QUEUE_LENGTH     10
 
 #endif /* FREERTOSCONFIG_H */
+]]
+)
+
+add_library(freertos_config INTERFACE)
+target_include_directories(freertos_config
+  SYSTEM INTERFACE
+  ${CMAKE_CURRENT_BINARY_DIR}
+)
+set(FREERTOS_HEAP 4 CACHE STRING "")
+set(FREERTOS_PORT GCC_POSIX CACHE STRING "")
+
+FetchContent_MakeAvailable(freertos)
+target_link_options(freertos_kernel PUBLIC
+  $<$<PLATFORM_ID:Linux>:-pthread>
+)
