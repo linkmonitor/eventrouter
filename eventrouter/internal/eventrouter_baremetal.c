@@ -47,6 +47,7 @@ static bool IsEventSendable(ErEvent_t *a_event)
 
 void ErInit(const ErOptions_t *a_options)
 {
+    ER_ASSERT(!s_context.m_initialized);
     // Baremetal event routers must have EXACTLY one task and at least one
     // module in that task. The only reason to keep the task abstraction at all
     // is to reuse function signatures and type definitions.
@@ -58,6 +59,7 @@ void ErInit(const ErOptions_t *a_options)
     for (size_t idx = 0; idx < task->m_num_modules; ++idx)
     {
         ErModule_t *module   = task->m_modules[idx];
+        ER_ASSERT(module->m_handler != NULL);
         module->m_task_idx   = 0;
         module->m_module_idx = idx;
         memset(&module->m_subscriptions, 0, sizeof(module->m_subscriptions));
