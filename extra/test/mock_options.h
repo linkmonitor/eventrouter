@@ -30,6 +30,10 @@ struct MockOptions
         MockModule<Module::F>::Reset();
     }
 
+    static bool m_is_in_isr;
+
+    static bool IsInIsr(void) { return m_is_in_isr; }
+
     ErTask_t m_task{
         .m_modules =
             (ErModule_t*[]){
@@ -46,7 +50,7 @@ struct MockOptions
     ErOptions_t m_options{
         .m_tasks     = &m_task,
         .m_num_tasks = 1,
-        .m_IsInIsr   = nullptr,
+        .m_IsInIsr   = IsInIsr,
     };
 };
 
