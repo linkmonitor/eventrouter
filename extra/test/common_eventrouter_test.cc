@@ -1,8 +1,6 @@
 #include "eventrouter.h"
 
-#include "gtest/gtest-death-test.h"
 #include "gtest/gtest.h"
-
 #include "mock_module.h"
 
 namespace
