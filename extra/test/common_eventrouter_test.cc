@@ -55,6 +55,33 @@ struct MockOptions
 
 bool MockOptions::m_is_in_isr = false;
 
+constexpr ErEvent_t kInvalidEvents[] = {
+    // Invalid event type.
+    {.m_type           = ER_EVENT_TYPE__INVALID,
+     .m_sending_module = &MockModule<MockOptions::Module::A>::m_module},
+    // Sending module is not tracked by the eventrouter.
+    {.m_type           = ER_EVENT_TYPE__1,
+     .m_sending_module = &MockModule<MockOptions::Module::Invalid>::m_module},
+    // Sending module is NULL.
+    {.m_type = ER_EVENT_TYPE__1, .m_sending_module = nullptr},
+};
+
+void CopyEvent(ErEvent_t &a_dst, const ErEvent_t &a_src)
+{
+    memcpy(&a_dst, &a_src, sizeof(a_dst));
+}
+
+void ResetEvent(ErEvent_t &a_event)
+{
+    constexpr ErEvent_t kValidEvent = {
+        .m_type           = ER_EVENT_TYPE__1,
+        .m_sending_module = &MockModule<MockOptions::Module::A>::m_module,
+    };
+    CopyEvent(a_event, kValidEvent);
+}
+
+}  // namespace
+
 namespace testing
 {
 
@@ -102,6 +129,20 @@ TEST(ErDeinit, DiesIfDeinitTwice)
     EXPECT_DEATH(ErDeinit(), ".*");
 }
 
+TEST(ErSend, DiesIfCalledBeforeInit)
+{
+    ErEvent_t event;
+    ResetEvent(event);
+    EXPECT_DEATH(ErSend(&event), ".*");
+}
+
+TEST(ErSendEx, DiesIfCalledBeforeInit)
+{
+    ErEvent_t event;
+    ResetEvent(event);
+    EXPECT_DEATH(ErSendEx(&event, {}), ".*");
+}
+
 //==============================================================================
 // Tests which assume initialization has completed successfully.
 //==============================================================================
@@ -110,12 +151,85 @@ class EventRouterTest : public Test
 {
    protected:
     EventRouterTest() { ErInit(&m_options.m_options); }
-    ~EventRouterTest()
-    {
-        ErDeinit();
-    }
+    ~EventRouterTest() { ErDeinit(); }
 
     MockOptions m_options;
 };
 
+TEST_F(EventRouterTest, SendDiesOnInvalidArguments)
+{
+    EXPECT_DEATH(ErSend(nullptr), ".*");
+
+    for (const auto &invalid_event : kInvalidEvents)
+    {
+        ErEvent_t event;
+        CopyEvent(event, invalid_event);
+        EXPECT_DEATH(ErSend(&event), ".*");
+    }
+}
+
+TEST_F(EventRouterTest, SendExDiesOnInvalidArguments)
+{
+    EXPECT_DEATH(ErSend(nullptr), ".*");
+
+    for (const auto &invalid_event : kInvalidEvents)
+    {
+        ErEvent_t event;
+        CopyEvent(event, invalid_event);
+        EXPECT_DEATH(ErSendEx(&event, {}), ".*");
+    }
+}
+
+TEST_F(EventRouterTest, CallHandlersDiesOnInvalidArguments)
+{
+    EXPECT_DEATH(ErSend(nullptr), ".*");
+
+    for (const auto &invalid_event : kInvalidEvents)
+    {
+        ErEvent_t event;
+        CopyEvent(event, invalid_event);
+        EXPECT_DEATH(ErCallHandlers(&event), ".*");
+    }
+}
+
+TEST_F(EventRouterTest, ReturnToSenderDiesOnInvalidArguments)
+{
+    EXPECT_DEATH(ErReturnToSender(nullptr), ".*");
+
+    for (const auto &invalid_event : kInvalidEvents)
+    {
+        ErEvent_t event;
+        CopyEvent(event, invalid_event);
+        EXPECT_DEATH(ErReturnToSender(&event), ".*");
+    }
+}
+
+TEST_F(EventRouterTest, SubscribeDiesOnInvalidArguments)
+{
+    EXPECT_DEATH(ErSubscribe(nullptr, ER_EVENT_TYPE__1), ".*");
+    EXPECT_DEATH(
+        ErSubscribe(&MockModule<MockOptions::Module::Invalid>::m_module,
+                    ER_EVENT_TYPE__1),
+        ".*");
+    EXPECT_DEATH(ErSubscribe(&MockModule<MockOptions::Module::A>::m_module,
+                             ER_EVENT_TYPE__INVALID),
+                 ".*");
+}
+
+TEST_F(EventRouterTest, UnsubscribeDiesOnInvalidArguments)
+{
+    EXPECT_DEATH(ErUnsubscribe(nullptr, ER_EVENT_TYPE__1), ".*");
+    EXPECT_DEATH(
+        ErUnsubscribe(&MockModule<MockOptions::Module::Invalid>::m_module,
+                      ER_EVENT_TYPE__1),
+        ".*");
+    EXPECT_DEATH(ErUnsubscribe(&MockModule<MockOptions::Module::A>::m_module,
+                               ER_EVENT_TYPE__INVALID),
+                 ".*");
+}
+
 }  // namespace testing
+
+/// TODO(jjaoudi):
+/// - Add multiple tasks to the mock options.
+/// - Write a test that exercises round-trip communication.
