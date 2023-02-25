@@ -165,19 +165,17 @@ void ErReturnToSender(ErEvent_t *a_event)
 
     a_event->m_reference_count--;
 
-    if (a_event->m_reference_count > 1)
+    if (a_event->m_reference_count > 0)
     {
         // Do nothing. Some modules have KEPT the event and must explicitly
         // call `ErReturnToSender()` before we can return it.
     }
-    else if (a_event->m_reference_count == 1)
+    else if (a_event->m_reference_count == 0)
     {
-        // All subscribed modules have received the event; return to its sender.
-        a_event->m_reference_count--;
-
         // Remove the event from the KEPT list (no-op if the event wasn't kept).
         ErListRemove(&s_context.m_events.m_kept, &a_event->m_next);
 
+        // All subscribed modules have received the event; return to its sender.
         a_event->m_sending_module->m_handler(a_event);
     }
 }
