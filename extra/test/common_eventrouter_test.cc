@@ -1,7 +1,13 @@
 #include "eventrouter.h"
 
+#include "eventrouter/internal/event_type.h"
+#include "eventrouter/internal/eventrouter_baremetal.h"
 #include "gtest/gtest.h"
 #include "mock_module.h"
+
+#ifdef ER_FREERTOS
+#include "mock_rtos.h"
+#endif
 
 namespace
 {
@@ -36,6 +42,10 @@ struct MockOptions
         &MockModule<Module::B>::m_module,
         &MockModule<Module::C>::m_module,
     };
+
+    /// These options only define one task because the tests in this file are
+    /// common to all implementations and the baremetal implementation only
+    /// supports single-task systems.
 
     ErTask_t m_task{
         .m_modules     = m_modules,
@@ -150,8 +160,48 @@ TEST(ErSendEx, DiesIfCalledBeforeInit)
 class EventRouterTest : public Test
 {
    protected:
-    EventRouterTest() { ErInit(&m_options.m_options); }
-    ~EventRouterTest() { ErDeinit(); }
+    EventRouterTest()
+    {
+        ErInit(&m_options.m_options);
+#ifdef ER_FREERTOS
+        ErSetRtosFunctions(&MockRtos::m_rtos_functions);
+        MockRtos::Init(&m_options.m_options);
+        MockRtos::SwitchTask(m_options.m_options.m_tasks[0].m_task_handle);
+#endif
+    }
+    ~EventRouterTest()
+    {
+        // Tests must not end with undelivered events. The assumption is that
+        // this represents a side-effect that test writers should handle
+        // explicitly. If necessary, tests can call `MaybeDeliverEvent()` until
+        // it returns `nullptr` if they want to empty the "queue".
+        assert(!MaybeDeliverEvent());
+        ErDeinit();
+    }
+
+    // Returns true when an event was delivered and false otherwise.
+    bool MaybeDeliverEvent()
+    {
+        ErEvent_t *event = nullptr;
+#ifdef ER_FREERTOS
+        if (MockRtos::AnyUnhandledEvents()) event = MockRtos::ReceiveEvent();
+#endif
+
+#ifdef ER_BAREMETAL
+        event = ErGetEventToDeliver();
+#endif
+        if (event) ErCallHandlers(event);
+        return event;
+    }
+
+    // Must be called between the call to `ErSend()` and the corresponding all
+    // to `MaybeDeliverEvent()`.
+    void PrepareToDeliverEvents()
+    {
+#ifdef ER_BAREMETAL
+        ErNewLoop();
+#endif
+    }
 
     MockOptions m_options;
 };
@@ -228,8 +278,142 @@ TEST_F(EventRouterTest, UnsubscribeDiesOnInvalidArguments)
                  ".*");
 }
 
-}  // namespace testing
+TEST_F(EventRouterTest, RepeatedlyCallingPrepareToDeliverEventsIsSafe)
+{
+    // This tests the test-fixture; it should be safe to prepare to deliver
+    // events multiple times without actually trying to delivering anything.
 
-/// TODO(jjaoudi):
-/// - Add multiple tasks to the mock options.
-/// - Write a test that exercises round-trip communication.
+    PrepareToDeliverEvents();
+    PrepareToDeliverEvents();
+    PrepareToDeliverEvents();
+    PrepareToDeliverEvents();
+}
+
+TEST_F(EventRouterTest, SendEventWithNoSubscribers)
+{
+    // Sending an event with no subscribers works as expected.
+
+    constexpr int kSendingModule = MockOptions::Module::A;
+
+    ErEvent_t event = {
+        .m_type           = ER_EVENT_TYPE__FIRST,
+        .m_sending_module = &MockModule<kSendingModule>::m_module,
+    };
+
+    ErSend(&event);
+
+    PrepareToDeliverEvents();
+    EXPECT_TRUE(MaybeDeliverEvent());
+
+    // When configured for a single-task, all backends return events to their
+    // sender immediately after delivering them to all subscribers.
+
+    EXPECT_EQ(MockModule<kSendingModule>::m_last_event_handled, &event);
+}
+
+TEST_F(EventRouterTest, DeliverEventToOneSubscriber)
+{
+    // Sending an event to a single subscriber works as expected.
+
+    constexpr int kSendingModule     = MockOptions::Module::A;
+    constexpr int kSubscribingModule = MockOptions::Module::B;
+
+    ErEvent_t event = {
+        .m_type           = ER_EVENT_TYPE__FIRST,
+        .m_sending_module = &MockModule<kSendingModule>::m_module,
+    };
+
+    ErSubscribe(&MockModule<kSubscribingModule>::m_module, event.m_type);
+    ErSend(&event);
+
+    PrepareToDeliverEvents();
+    EXPECT_TRUE(MaybeDeliverEvent());
+
+    EXPECT_EQ(MockModule<kSubscribingModule>::m_last_event_handled, &event);
+    EXPECT_EQ(MockModule<kSendingModule>::m_last_event_handled, &event);
+}
+
+TEST_F(EventRouterTest, DeliverEventToMultipleSubscribers)
+{
+    // Multiple modules can subscribe to an event type.
+
+    constexpr int kSendingModule      = MockOptions::Module::A;
+    constexpr int kSubscribingModule1 = MockOptions::Module::B;
+    constexpr int kSubscribingModule2 = MockOptions::Module::C;
+
+    ErEvent_t event = {
+        .m_type           = ER_EVENT_TYPE__FIRST,
+        .m_sending_module = &MockModule<kSendingModule>::m_module,
+    };
+
+    ErSubscribe(&MockModule<kSubscribingModule1>::m_module, event.m_type);
+    ErSubscribe(&MockModule<kSubscribingModule2>::m_module, event.m_type);
+    ErSend(&event);
+
+    PrepareToDeliverEvents();
+    EXPECT_TRUE(MaybeDeliverEvent());
+
+    EXPECT_EQ(MockModule<kSubscribingModule1>::m_last_event_handled, &event);
+    EXPECT_EQ(MockModule<kSubscribingModule2>::m_last_event_handled, &event);
+    EXPECT_EQ(MockModule<kSendingModule>::m_last_event_handled, &event);
+}
+
+TEST_F(EventRouterTest, DontDeliverEventsIfClientsUnsubscribeWhileInTransit)
+{
+    /// Demonstrate an example of instantaneous unsubscription.
+
+    constexpr int kSendingModule      = MockOptions::Module::A;
+    constexpr int kSubscribingModule1 = MockOptions::Module::B;
+    constexpr int kSubscribingModule2 = MockOptions::Module::C;
+
+    ErEvent_t event = {
+        .m_type           = ER_EVENT_TYPE__FIRST,
+        .m_sending_module = &MockModule<kSendingModule>::m_module,
+    };
+
+    ErSubscribe(&MockModule<kSubscribingModule1>::m_module, event.m_type);
+    ErSubscribe(&MockModule<kSubscribingModule2>::m_module, event.m_type);
+    ErSend(&event);
+
+    PrepareToDeliverEvents();
+    ErUnsubscribe(&MockModule<kSubscribingModule2>::m_module, event.m_type);
+    EXPECT_TRUE(MaybeDeliverEvent());
+
+    EXPECT_EQ(MockModule<kSubscribingModule1>::m_last_event_handled, &event);
+    EXPECT_EQ(MockModule<kSubscribingModule2>::m_last_event_handled, nullptr);
+    EXPECT_EQ(MockModule<kSendingModule>::m_last_event_handled, &event);
+}
+
+TEST_F(EventRouterTest, CrossSendAndSubscribe)
+{
+    /// Two modules send an event and subscribe to each others'.
+
+    constexpr int kModuleA = MockOptions::Module::A;
+    constexpr int kModuleB = MockOptions::Module::B;
+
+    ErEvent_t eventa = {.m_type           = ER_EVENT_TYPE__FIRST,
+                        .m_sending_module = &MockModule<kModuleA>::m_module};
+
+    ErEvent_t eventb = {.m_type           = ER_EVENT_TYPE__LAST,
+                        .m_sending_module = &MockModule<kModuleB>::m_module};
+
+    /// Subscribe the modules to the other modules' events.
+    ErSubscribe(&MockModule<kModuleA>::m_module, eventb.m_type);
+    ErSubscribe(&MockModule<kModuleB>::m_module, eventa.m_type);
+
+    ErSend(&eventa);
+    ErSend(&eventb);
+
+    PrepareToDeliverEvents();
+    EXPECT_TRUE(MaybeDeliverEvent());
+
+    EXPECT_EQ(MockModule<kModuleB>::m_last_event_handled, &eventa);  // Deliver.
+    EXPECT_EQ(MockModule<kModuleA>::m_last_event_handled, &eventa);  // Return.
+
+    EXPECT_TRUE(MaybeDeliverEvent());
+
+    EXPECT_EQ(MockModule<kModuleA>::m_last_event_handled, &eventb);  // Deliver.
+    EXPECT_EQ(MockModule<kModuleB>::m_last_event_handled, &eventb);  // Return.
+}
+
+}  // namespace testing
