@@ -207,14 +207,17 @@ void ErUnsubscribe(ErModule_t *a_module, ErEventType_t a_event_type)
 
 void ErNewLoop(void)
 {
-    /// Keep events which may not have been delivered during the previous loop
-    /// at the head of the "deliver now" list and add events which were
-    /// scheduled for delivery during the previous loop.
-    ErListAppend(&s_context.m_events.m_deliver_now,
-                 s_context.m_events.m_deliver_next.m_next);
-    /// Clear the "deliver next" list so it can be filled during this loop and
-    /// delivered during the next loop.
-    s_context.m_events.m_deliver_next.m_next = NULL;
+    if (s_context.m_events.m_deliver_next.m_next != NULL)
+    {
+        /// Keep events which may not have been delivered during the previous
+        /// loop at the head of the "deliver now" list and add events which were
+        /// scheduled for delivery during the previous loop.
+        ErListAppend(&s_context.m_events.m_deliver_now,
+                     s_context.m_events.m_deliver_next.m_next);
+        /// Clear the "deliver next" list so it can be filled during this loop
+        /// and delivered during the next loop.
+        s_context.m_events.m_deliver_next.m_next = NULL;
+    }
 }
 
 ErEvent_t *ErGetEventToDeliver(void)
