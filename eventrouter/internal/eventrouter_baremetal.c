@@ -58,7 +58,7 @@ void ErInit(const ErOptions_t *a_options)
 
     for (size_t idx = 0; idx < task->m_num_modules; ++idx)
     {
-        ErModule_t *module   = task->m_modules[idx];
+        ErModule_t *module = task->m_modules[idx];
         ER_ASSERT(module->m_handler != NULL);
         module->m_task_idx   = 0;
         module->m_module_idx = idx;
