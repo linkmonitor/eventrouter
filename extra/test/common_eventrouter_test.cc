@@ -48,12 +48,12 @@ struct MockOptions
     /// supports single-task systems.
 
     ErTask_t m_task{
+#ifdef ER_FREERTOS
+        .m_task_handle = (TaskHandle_t)1,
+        .m_event_queue = (QueueHandle_t)1,
+#endif
         .m_modules     = m_modules,
         .m_num_modules = kNumModules,
-#ifdef ER_FREERTOS
-        .m_event_queue = (QueueHandle_t)1,
-        .m_task_handle = (TaskHandle_t)1,
-#endif
     };
 
     ErOptions_t m_options{
