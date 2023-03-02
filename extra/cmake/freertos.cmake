@@ -3,12 +3,10 @@ include(FetchContent)
 FetchContent_Declare(
   freertos
   GIT_REPOSITORY https://github.com/FreeRTOS/FreeRTOS-Kernel
-  GIT_TAG main
+  GIT_TAG V10.5.1
 )
 
-file(GENERATE
-  OUTPUT FreeRTOSConfig.h
-  CONTENT
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/FreeRTOSConfig.h
 [[
 #ifndef FREERTOSCONFIG_H
 #define FREERTOSCONFIG_H
@@ -36,11 +34,7 @@ file(GENERATE
 ]]
 )
 
-add_library(freertos_config INTERFACE)
-target_include_directories(freertos_config
-  SYSTEM INTERFACE
-  ${CMAKE_CURRENT_BINARY_DIR}
-)
+set(FREERTOS_CONFIG_FILE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} CACHE STRING "")
 set(FREERTOS_HEAP 4 CACHE STRING "")
 set(FREERTOS_PORT GCC_POSIX CACHE STRING "")
 
