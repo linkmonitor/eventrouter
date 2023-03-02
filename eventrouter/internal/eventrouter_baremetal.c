@@ -153,7 +153,6 @@ void ErCallHandlers(ErEvent_t *a_event)
     /// This event no longer needs delivery.
     ErListRemove(&s_context.m_events.m_deliver_now, &a_event->m_next);
 
-done:
     ErReturnToSender(a_event);
 }
 
