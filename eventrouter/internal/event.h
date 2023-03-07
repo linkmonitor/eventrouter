@@ -82,8 +82,13 @@ extern "C"
     /// Initialize the event fields of a struct which mixes-in `ErEvent_t`
     /// behavior. This differs from `ErEventInit_t` in that it can be used in
     /// static definitions using designated initializers.
+#ifdef __cplusplus
 #define INIT_ER_EVENT(a_type, a_module) \
-    .ER_EVENT_MEMBER = {.m_type = a_type, .m_sending_module = a_module}
+    .ER_EVENT_MEMBER = {.m_type = a_type, .m_reference_count = {0}, .m_sending_module = a_module}
+#else
+#define INIT_ER_EVENT(a_type, a_module) \
+    .ER_EVENT_MEMBER = {.m_type = a_type, .m_reference_count = 0, .m_sending_module = a_module}
+#endif
 
 #ifdef __cplusplus
 }
