@@ -44,6 +44,9 @@ extern "C"
         a_event->m_type            = a_type;
         a_event->m_reference_count = 0;
         a_event->m_sending_module  = a_module;
+#ifdef ER_BAREMETAL
+        a_event->m_next.m_next = NULL;
+#endif
     }
 
     /// Add this to the top-level of a struct definition to make values of that
