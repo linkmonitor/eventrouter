@@ -82,16 +82,28 @@ extern "C"
 #define FROM_ER_EVENT(a_event_p, a_type) \
     (*container_of(a_event_p, a_type, ER_EVENT_MEMBER))
 
+    /// Helper macro to initialize atomic_int
+#ifdef __cplusplus
+#define INIT_ATOMIC_INT(x) {(x)}
+#else
+#define INIT_ATOMIC_INT(x) (x)
+#endif  // __cplusplus
+
     /// Initialize the event fields of a struct which mixes-in `ErEvent_t`
     /// behavior. This differs from `ErEventInit_t` in that it can be used in
     /// static definitions using designated initializers.
-#ifdef __cplusplus
-#define INIT_ER_EVENT(a_type, a_module) \
-    .ER_EVENT_MEMBER = {.m_type = a_type, .m_reference_count = {0}, .m_sending_module = a_module}
-#else
-#define INIT_ER_EVENT(a_type, a_module) \
-    .ER_EVENT_MEMBER = {.m_type = a_type, .m_reference_count = 0, .m_sending_module = a_module}
-#endif
+#ifdef ER_BAREMETAL
+#define INIT_ER_EVENT(a_type, a_module)                          \
+    .ER_EVENT_MEMBER = {.m_type            = a_type,             \
+                        .m_reference_count = INIT_ATOMIC_INT(0), \
+                        .m_sending_module  = a_module,           \
+                        .m_next.m_next     = NULL}
+#else /* !ER_BAREMETAL */
+#define INIT_ER_EVENT(a_type, a_module)                          \
+    .ER_EVENT_MEMBER = {.m_type            = a_type,             \
+                        .m_reference_count = INIT_ATOMIC_INT(0), \
+                        .m_sending_module  = a_module}
+#endif /* ER_BAREMETAL */
 
 #ifdef __cplusplus
 }
