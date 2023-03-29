@@ -228,6 +228,7 @@ ErEvent_t *ErGetEventToDeliver(void)
     {
         ret          = container_of(node->m_next, ErEvent_t, m_next);
         node->m_next = node->m_next->m_next;
+        ret->m_next.m_next = NULL;
     }
 
     return ret;
