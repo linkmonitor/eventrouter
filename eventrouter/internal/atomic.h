@@ -16,4 +16,14 @@
 #include <stdatomic.h>
 #endif
 
+/// Helper macro to initialize atomic_int
+#ifdef __cplusplus
+#define INIT_ATOMIC_INT(x) \
+    {                      \
+        (x)                \
+    }
+#else
+#define INIT_ATOMIC_INT(x) (x)
+#endif  // __cplusplus
+
 #endif /* EVENTROUTER_ATOMIC_H */

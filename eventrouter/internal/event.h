@@ -82,13 +82,6 @@ extern "C"
 #define FROM_ER_EVENT(a_event_p, a_type) \
     (*container_of(a_event_p, a_type, ER_EVENT_MEMBER))
 
-    /// Helper macro to initialize atomic_int
-#ifdef __cplusplus
-#define INIT_ATOMIC_INT(x) {(x)}
-#else
-#define INIT_ATOMIC_INT(x) (x)
-#endif  // __cplusplus
-
     /// Initialize the event fields of a struct which mixes-in `ErEvent_t`
     /// behavior. This differs from `ErEventInit_t` in that it can be used in
     /// static definitions using designated initializers.
