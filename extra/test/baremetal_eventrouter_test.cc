@@ -77,15 +77,16 @@ TEST_F(ErBaremetalTest, SendEventAndReuse)
 
     ErSubscribe(&MockModule<kSubscribingModule>::m_module, event.m_type);
 
-    ErSend(&event);
-
     MockModule<kSubscribingModule>::m_event_handler_ret =
         ER_EVENT_HANDLER_RET__HANDLED;
+
+    ErSend(&event);
 
     ErNewLoop();
     EXPECT_EQ(ErGetEventToDeliver(), &event);
     ErCallHandlers(&event);
     EXPECT_EQ(MockModule<kSendingModule>::m_last_event_handled, &event);
+    EXPECT_EQ(MockModule<kSubscribingModule>::m_last_event_handled, &event);
     EXPECT_EQ(ErGetEventToDeliver(), nullptr);
 
     ErSend(&event);
@@ -94,6 +95,8 @@ TEST_F(ErBaremetalTest, SendEventAndReuse)
     EXPECT_EQ(ErGetEventToDeliver(), &event);
     ErCallHandlers(&event);
     EXPECT_EQ(MockModule<kSendingModule>::m_last_event_handled, &event);
+    EXPECT_EQ(MockModule<kSubscribingModule>::m_last_event_handled, &event);
+    EXPECT_EQ(ErGetEventToDeliver(), nullptr);
 }
 
 TEST_F(ErBaremetalTest, SendTwoEventsAndReuse)
@@ -118,19 +121,21 @@ TEST_F(ErBaremetalTest, SendTwoEventsAndReuse)
     ErSubscribe(&MockModule<kSubscribingModule>::m_module, event1.m_type);
     ErSubscribe(&MockModule<kSubscribingModule>::m_module, event2.m_type);
 
-    ErSend(&event1);
-    ErSend(&event2);
-
     MockModule<kSubscribingModule>::m_event_handler_ret =
         ER_EVENT_HANDLER_RET__HANDLED;
+
+    ErSend(&event1);
+    ErSend(&event2);
 
     ErNewLoop();
     EXPECT_EQ(ErGetEventToDeliver(), &event1);
     ErCallHandlers(&event1);
     EXPECT_EQ(MockModule<kSendingModule>::m_last_event_handled, &event1);
+    EXPECT_EQ(MockModule<kSubscribingModule>::m_last_event_handled, &event1);
     EXPECT_EQ(ErGetEventToDeliver(), &event2);
     ErCallHandlers(&event2);
     EXPECT_EQ(MockModule<kSendingModule>::m_last_event_handled, &event2);
+    EXPECT_EQ(MockModule<kSubscribingModule>::m_last_event_handled, &event2);
     EXPECT_EQ(ErGetEventToDeliver(), nullptr);
 
     ErSend(&event1);
@@ -140,9 +145,11 @@ TEST_F(ErBaremetalTest, SendTwoEventsAndReuse)
     EXPECT_EQ(ErGetEventToDeliver(), &event1);
     ErCallHandlers(&event1);
     EXPECT_EQ(MockModule<kSendingModule>::m_last_event_handled, &event1);
+    EXPECT_EQ(MockModule<kSubscribingModule>::m_last_event_handled, &event1);
     EXPECT_EQ(ErGetEventToDeliver(), &event2);
     ErCallHandlers(&event2);
     EXPECT_EQ(MockModule<kSendingModule>::m_last_event_handled, &event2);
+    EXPECT_EQ(MockModule<kSubscribingModule>::m_last_event_handled, &event2);
     EXPECT_EQ(ErGetEventToDeliver(), nullptr);
 }
 
