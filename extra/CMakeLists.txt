@@ -24,6 +24,8 @@ include(cmake/googletest.cmake)
 # Build implementation-specific eventrouter libs; used by examples and tests.
 # ===============================================================================
 
+add_compile_options(-g -Wall -Wextra)
+
 add_library(baremetal_eventrouter STATIC ${REPOSITORY_ROOT}/eventrouter.c)
 target_include_directories(baremetal_eventrouter PUBLIC ${REPOSITORY_ROOT}  .)
 target_compile_definitions(baremetal_eventrouter PUBLIC -DER_BAREMETAL)
@@ -32,6 +34,10 @@ add_library(freertos_eventrouter STATIC ${REPOSITORY_ROOT}/eventrouter.c)
 target_include_directories(freertos_eventrouter PUBLIC ${REPOSITORY_ROOT} .)
 target_link_libraries(freertos_eventrouter PUBLIC freertos_kernel)
 target_compile_definitions(freertos_eventrouter PUBLIC -DER_FREERTOS)
+
+add_library(posix_eventrouter STATIC ${REPOSITORY_ROOT}/eventrouter.c)
+target_include_directories(posix_eventrouter PUBLIC ${REPOSITORY_ROOT} .)
+target_compile_definitions(posix_eventrouter PUBLIC -DER_POSIX)
 
 #===============================================================================
 # Build tests and example applications

@@ -33,11 +33,12 @@
 
 /// Default to the FreeRTOS implementation. Clients may specify ER_BAREMETAL in
 /// their eventrouter_config.h and then build without FreeRTOS.
-#if !defined(ER_FREERTOS) && !defined(ER_BAREMETAL)
+#if !defined(ER_FREERTOS) && !defined(ER_BAREMETAL) && !defined(ER_POSIX)
 #define ER_FREERTOS
 #endif
 
 /// Sanity check the implementation definitions.
+/// TODO: Three way check.
 #if defined(ER_FREERTOS) && defined(ER_BAREMETAL)
 ER_STATIC_ASSERT(0, "Only one of ER_FREERTOS and ER_BAREMETAL may be defined");
 #endif

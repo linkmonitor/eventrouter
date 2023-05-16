@@ -26,3 +26,17 @@ target_link_libraries(freertos_eventrouter_test PRIVATE
   gtest_main
 )
 gtest_discover_tests(freertos_eventrouter_test)
+
+#===============================================================================
+# POSIX
+# ===============================================================================
+
+add_executable(posix_eventrouter_test
+  common_eventrouter_test.cc
+  posix_eventrouter_test.cc
+)
+target_link_libraries(posix_eventrouter_test PRIVATE
+  posix_eventrouter
+  gtest_main
+)
+gtest_discover_tests(posix_eventrouter_test)

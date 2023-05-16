@@ -13,6 +13,12 @@
 #include "task.h"
 #endif  // ER_FREERTOS
 
+
+#ifdef ER_POSIX
+#include <mqueue.h>
+#include <pthread.h>
+#endif  // ER_POSIX
+
 #include "event_type.h"
 #include "module.h"
 
@@ -32,6 +38,17 @@ extern "C"
         uint8_t
             m_subscriptions[(ER_EVENT_TYPE__COUNT + (CHAR_BIT - 1)) / CHAR_BIT];
 #endif  // ER_FREERTOS
+
+#ifdef ER_POSIX
+        /// Used to identify the task some event router functions are called in.
+        pthread_t m_task_handle;
+        /// The queue that this task draws `ErEvent_t*` entries from.
+        mqd_t m_event_queue;
+        /// A superset of all module subscriptions within the task.
+        uint8_t
+            m_subscriptions[(ER_EVENT_TYPE__COUNT + (CHAR_BIT - 1)) / CHAR_BIT];
+#endif  // ER_POSIX
+
 
         /// The list of modules this task contains; multiple tasks MUST NOT
         /// contain the same module. Each task MUST contain at least one module.

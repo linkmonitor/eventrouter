@@ -37,3 +37,17 @@ target_link_libraries(freertos_eventrouter_example
   PRIVATE
   freertos_eventrouter
 )
+
+#===============================================================================
+# POSIX
+# ===============================================================================
+
+add_executable(posix_eventrouter_example
+  ${COMMON_MODULE_SOURCES}
+  posix_eventrouter_example.c
+  task_posix.c
+)
+target_link_libraries(posix_eventrouter_example
+  PRIVATE
+  posix_eventrouter
+)
