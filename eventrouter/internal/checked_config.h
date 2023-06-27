@@ -39,7 +39,7 @@
 
 /// Sanity check the implementation definitions.
 #if defined(ER_FREERTOS) && defined(ER_BAREMETAL)
-ER_STATIC_ASSERT(0, "Only one of ER_FREERTOS and ER_BAREMETAL may be defined");
+#error "Only one of ER_FREERTOS and ER_BAREMETAL may be defined"
 #endif
 
 /// All values in `ErEventType_t` must be monotonically increasing without gaps
