@@ -3,13 +3,11 @@
 
 #include "checked_config.h"
 
-#ifndef ER_FREERTOS
-#error "These functions only work in the FreeRTOS implementation."
-#endif // ER_FREERTOS
+#ifndef ER_CONFIG_OS
+#error "These functions only apply to OS-backed implementations."
+#endif
 
-#include "FreeRTOS.h"
-#include "queue.h"
-#include "task.h"
+#include "os_types.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -18,8 +16,8 @@ extern "C"
 
     typedef struct
     {
-        void (*SendEvent)(QueueHandle_t a_queue, void *a_event);
-        TaskHandle_t (*GetCurrentTaskHandle)(void);
+        void (*SendEvent)(ErQueueHandle_t a_queue, void *a_event);
+        ErTaskHandle_t (*GetCurrentTaskHandle)(void);
     } ErRtosFunctions_t;
 
     /// Overrides the RTOS functions used by this module. This makes testing
