@@ -164,7 +164,7 @@ class EventRouterTest : public Test
     {
         ErInit(&m_options.m_options);
 #ifdef ER_FREERTOS
-        ErSetRtosFunctions(&MockRtos::m_rtos_functions);
+        ErSetOsFunctions(&MockRtos::m_os_functions);
         MockRtos::Init(&m_options.m_options);
         MockRtos::SwitchTask(m_options.m_options.m_tasks[0].m_task_handle);
 #endif

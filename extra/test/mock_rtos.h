@@ -14,7 +14,7 @@
 #include <string.h>
 
 #include "eventrouter.h"
-#include "eventrouter/internal/rtos_functions.h"
+#include "eventrouter/internal/os_functions.h"
 
 /// Implements the RTOS interactions used by the Event Router.
 struct MockRtos
@@ -71,7 +71,7 @@ struct MockRtos
 
     //==========================================================================
     // The following three functions fill out a
-    // `ErRtosFunctions_t` struct and either capture their
+    // `ErosFunctions_t` struct and either capture their
     // arguments or allow tests to specify their return values.
     // ==========================================================================
 
@@ -86,7 +86,7 @@ struct MockRtos
     static TaskHandle_t m_running_task;
     static std::unordered_map<QueueHandle_t, std::queue<ErEvent_t *>>
         m_sent_events;
-    static constexpr ErRtosFunctions_t m_rtos_functions = {
+    static constexpr ErOsFunctions_t m_os_functions = {
         .SendEvent            = SendEvent,
         .GetCurrentTaskHandle = GetCurrentTaskHandle,
     };
