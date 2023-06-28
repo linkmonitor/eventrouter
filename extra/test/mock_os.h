@@ -1,8 +1,8 @@
-#ifndef MOCK_RTOS_H
-#define MOCK_RTOS_H
+#ifndef MOCK_OS_H
+#define MOCK_OS_H
 
-/// This structure is useful for simulating portions of FreeRTOS and setting up
-/// the Event Router in unit tests.
+/// This structure is useful for simulating the portions of operating systems
+/// used by the Event Router in unit tests
 
 #ifndef __cplusplus
 #error "This module only supports C++"
@@ -16,8 +16,8 @@
 #include "eventrouter.h"
 #include "eventrouter/internal/os_functions.h"
 
-/// Implements the RTOS interactions used by the Event Router.
-struct MockRtos
+/// Implements the OS interactions used by the Event Router.
+struct MockOs
 {
     static void Init(const ErOptions_t *a_options)
     {
@@ -69,10 +69,15 @@ struct MockRtos
 
     static bool IsInIsr(void) { return false; }
 
+    static ErOptions_t m_event_router_options;
+    static TaskHandle_t m_running_task;
+    static std::unordered_map<QueueHandle_t, std::queue<ErEvent_t *>>
+        m_sent_events;
+    static int64_t m_now_ms;
+
     //==========================================================================
-    // The following three functions fill out a
-    // `ErosFunctions_t` struct and either capture their
-    // arguments or allow tests to specify their return values.
+    // These functions populate a `ErOsFunctions_t` struct and either capture
+    // arguments or allow tests to specify return values.
     // ==========================================================================
 
     static void SendEvent(QueueHandle_t a_queue, void *a_event)
@@ -82,15 +87,10 @@ struct MockRtos
 
     static TaskHandle_t GetCurrentTaskHandle() { return m_running_task; }
 
-    static ErOptions_t m_event_router_options;
-    static TaskHandle_t m_running_task;
-    static std::unordered_map<QueueHandle_t, std::queue<ErEvent_t *>>
-        m_sent_events;
     static constexpr ErOsFunctions_t m_os_functions = {
         .SendEvent            = SendEvent,
         .GetCurrentTaskHandle = GetCurrentTaskHandle,
     };
-    static int64_t m_now_ms;
 };
 
-#endif /* MOCK_RTOS_H */
+#endif /* MOCK_OS_H */

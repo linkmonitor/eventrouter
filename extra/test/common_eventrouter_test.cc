@@ -6,7 +6,7 @@
 #include "mock_module.h"
 
 #ifdef ER_FREERTOS
-#include "mock_rtos.h"
+#include "mock_os.h"
 #endif
 
 namespace
@@ -164,9 +164,9 @@ class EventRouterTest : public Test
     {
         ErInit(&m_options.m_options);
 #ifdef ER_FREERTOS
-        ErSetOsFunctions(&MockRtos::m_os_functions);
-        MockRtos::Init(&m_options.m_options);
-        MockRtos::SwitchTask(m_options.m_options.m_tasks[0].m_task_handle);
+        ErSetOsFunctions(&MockOs::m_os_functions);
+        MockOs::Init(&m_options.m_options);
+        MockOs::SwitchTask(m_options.m_options.m_tasks[0].m_task_handle);
 #endif
     }
     ~EventRouterTest()
@@ -184,7 +184,7 @@ class EventRouterTest : public Test
     {
         ErEvent_t *event = nullptr;
 #ifdef ER_FREERTOS
-        if (MockRtos::AnyUnhandledEvents()) event = MockRtos::ReceiveEvent();
+        if (MockOs::AnyUnhandledEvents()) event = MockOs::ReceiveEvent();
 #endif
 
 #ifdef ER_BAREMETAL
