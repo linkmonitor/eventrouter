@@ -12,7 +12,7 @@
 
 #include "bitref.h"
 #include "defs.h"
-#include "rtos_functions.h"
+#include "os_functions.h"
 
 /// The maximum number of tasks the Event Router can support without changing
 /// the dispatch strategy in `ErSend()`.
@@ -22,7 +22,7 @@ static struct
 {
     bool m_initialized;
     const ErOptions_t *m_options;
-    ErRtosFunctions_t m_rtos_functions;
+    ErOsFunctions_t m_os_functions;
 } s_context;
 
 static bool IsInIsr(void)
@@ -131,7 +131,7 @@ static size_t GetIndexOfCurrentTask(void)
 {
     const ErOptions_t *options = s_context.m_options;
     const TaskHandle_t current_task =
-        s_context.m_rtos_functions.GetCurrentTaskHandle();
+        s_context.m_os_functions.GetCurrentTaskHandle();
 
     int task_idx = -1;
     for (size_t idx = 0; idx < options->m_num_tasks; ++idx)
@@ -165,7 +165,7 @@ void ErInit(const ErOptions_t *a_options)
     ER_ASSERT(!s_context.m_initialized);
     ValidateAndInitializeOptions(a_options);
     s_context.m_options        = a_options;
-    s_context.m_rtos_functions = (ErRtosFunctions_t){
+    s_context.m_os_functions = (ErOsFunctions_t){
         .SendEvent            = DefaultSendEvent,
         .GetCurrentTaskHandle = DefaultGetCurrentTaskHandle,
     };
@@ -295,7 +295,7 @@ void ErSendEx(ErEvent_t *a_event, ErSendExOptions_t a_options)
         // copy of the event. Send the event here and exit the function.
         if (subscribed_task_count == 0)
         {
-            s_context.m_rtos_functions.SendEvent(sending_task->m_event_queue,
+            s_context.m_os_functions.SendEvent(sending_task->m_event_queue,
                                                  a_event);
             return;
         }
@@ -377,7 +377,7 @@ void ErSendEx(ErEvent_t *a_event, ErSendExOptions_t a_options)
     {
         if (subscribed_task_mask & (1 << idx))
         {
-            s_context.m_rtos_functions.SendEvent(
+            s_context.m_os_functions.SendEvent(
                 s_context.m_options->m_tasks[idx].m_event_queue, a_event);
         }
     }
@@ -474,7 +474,7 @@ void ErReturnToSender(ErEvent_t *a_event)
         // send it to that task's queue.
         if (sending_task_idx != GetIndexOfCurrentTask())
         {
-            s_context.m_rtos_functions.SendEvent(
+            s_context.m_os_functions.SendEvent(
                 s_context.m_options->m_tasks[sending_task_idx].m_event_queue,
                 a_event);
 
@@ -577,12 +577,12 @@ void ErUnsubscribe(ErModule_t *a_module, ErEventType_t a_event_type)
     }
 }
 
-void ErSetRtosFunctions(const ErRtosFunctions_t *a_fns)
+void ErSetOsFunctions(const ErOsFunctions_t *a_fns)
 {
     ER_ASSERT(s_context.m_initialized);
     ER_ASSERT(a_fns != NULL);
     ER_ASSERT(a_fns->SendEvent != NULL);
     ER_ASSERT(a_fns->GetCurrentTaskHandle != NULL);
 
-    s_context.m_rtos_functions = *a_fns;
+    s_context.m_os_functions = *a_fns;
 }

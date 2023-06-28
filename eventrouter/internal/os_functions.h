@@ -1,5 +1,5 @@
-#ifndef EVENTROUTER_RTOS_FUNCTIONS_H
-#define EVENTROUTER_RTOS_FUNCTIONS_H
+#ifndef EVENTROUTER_OS_FUNCTIONS_H
+#define EVENTROUTER_OS_FUNCTIONS_H
 
 #include "checked_config.h"
 
@@ -18,15 +18,15 @@ extern "C"
     {
         void (*SendEvent)(ErQueueHandle_t a_queue, void *a_event);
         ErTaskHandle_t (*GetCurrentTaskHandle)(void);
-    } ErRtosFunctions_t;
+    } ErOsFunctions_t;
 
-    /// Overrides the RTOS functions used by this module. This makes testing
+    /// Overrides the OS functions used by this module. This makes testing
     /// easier and is not needed in device applications; default implementations
     /// for these functions are selected when this is not called.
-    void ErSetRtosFunctions(const ErRtosFunctions_t *a_fns);
+    void ErSetOsFunctions(const ErOsFunctions_t *a_fns);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* EVENTROUTER_RTOS_FUNCTIONS_H */
+#endif /* EVENTROUTER_OS_FUNCTIONS_H */
