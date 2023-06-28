@@ -28,7 +28,8 @@ extern "C"
         TaskHandle_t m_task_handle;
         /// The queue that this task draws `ErEvent_t*` entries from.
         QueueHandle_t m_event_queue;
-        /// A superset of all module subscriptions within the task.
+        /// A superset of module subscriptions within a task. This optimization
+        /// makes task selection faster in `ErSend()` (and related functions).
         uint8_t
             m_subscriptions[(ER_EVENT_TYPE__COUNT + (CHAR_BIT - 1)) / CHAR_BIT];
 #endif  // ER_FREERTOS
