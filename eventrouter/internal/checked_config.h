@@ -5,6 +5,10 @@
 /// contents for errors, and provides defaults (as necessary).
 #include "eventrouter_config.h"
 
+//==============================================================================
+// Utility definitions
+//==============================================================================
+
 /// Clients may provide their own assertion macro. If they do not, the Event
 /// Router defaults to C's standard `assert()` macro.
 #ifndef ER_ASSERT
@@ -31,6 +35,19 @@
 #endif
 #endif
 
+/// Returns the address of the structure containing the member.
+#ifndef container_of
+#define container_of(ptr, type, member)                    \
+    ({                                                     \
+        const typeof(((type *)0)->member) *__mptr = (ptr); \
+        (type *)((char *)__mptr - offsetof(type, member)); \
+    })
+#endif
+
+//==============================================================================
+// Implementation Selection
+//==============================================================================
+
 /// Default to the FreeRTOS implementation. Clients may specify ER_BAREMETAL in
 /// their eventrouter_config.h and then build without FreeRTOS.
 #if !defined(ER_FREERTOS) && !defined(ER_BAREMETAL)
@@ -41,6 +58,10 @@
 #if defined(ER_FREERTOS) && defined(ER_BAREMETAL)
 #error "Only one of ER_FREERTOS and ER_BAREMETAL may be defined"
 #endif
+
+//==============================================================================
+// Core Configuration
+//==============================================================================
 
 /// All values in `ErEventType_t` must be monotonically increasing without gaps
 /// but they do not have to start at 0. ER_EVENT_TYPE__OFFSET specifies the
@@ -73,15 +94,6 @@
 /// conflicts occur in derived types.
 #ifndef ER_EVENT_MEMBER
 #define ER_EVENT_MEMBER m_event
-#endif
-
-/// Returns the address of the structure containing the member.
-#ifndef container_of
-#define container_of(ptr, type, member)                    \
-    ({                                                     \
-        const typeof(((type *)0)->member) *__mptr = (ptr); \
-        (type *)((char *)__mptr - offsetof(type, member)); \
-    })
 #endif
 
 #endif /* EVENTROUTER_CHECKED_CONFIG_H */
