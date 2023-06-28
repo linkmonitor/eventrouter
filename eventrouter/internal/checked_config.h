@@ -48,15 +48,42 @@
 // Implementation Selection
 //==============================================================================
 
-/// Default to the FreeRTOS implementation. Clients may specify ER_BAREMETAL in
-/// their eventrouter_config.h and then build without FreeRTOS.
-#if !defined(ER_FREERTOS) && !defined(ER_BAREMETAL)
-#define ER_FREERTOS
-#endif
+// These are the supported event router implementations. Clients select one by
+// defining ER_IMPLEMENTATION to it. For example, placing the following
+// definition in eventrouter_config.h chooses the FreeRTOS implementation:
+//
+//    #define ER_IMPLEMENTATION ER_IMPL_FREERTOS
+//
+#define ER_IMPL_FREERTOS  1
+#define ER_IMPL_POSIX     2
+#define ER_IMPL_BAREMETAL 3
 
-/// Sanity check the implementation definitions.
+// In previous versions of the event router, clients specified ER_FREERTOS and
+// ER_BAREMETAL directly, instead of defining ER_IMPLEMENTATION. These checks
+// convert old choices to new ones for backward compatibility.
 #if defined(ER_FREERTOS) && defined(ER_BAREMETAL)
 #error "Only one of ER_FREERTOS and ER_BAREMETAL may be defined"
+#endif
+#if defined(ER_FREERTOS)
+#define ER_IMPLEMENTATION ER_IMPL_FREERTOS
+#endif
+#if defined(ER_BAREMETAL)
+#define ER_IMPLEMENTATION ER_IMPL_BAREMETAL
+#endif
+
+// The FreeRTOS implementation is the default for historical reasons.
+#define ER_IMPLEMENTATION_DEFAULT ER_IMPL_FREERTOS
+
+// Make sure ER_IMPLEMENTATION is valid and provide a default if necessary.
+#if !defined(ER_IMPLEMENTATION)
+#define ER_IMPLEMENTATION ER_IMPLEMENTATION_DEFAULT
+#elif 1 - ER_IMPLEMENTATION - 1 == 2  // Detect "#define ER_IMPLEMENTATION".
+#error "ER_IMPLEMENTATION cannot be defined with no body."
+#elif ER_IMPLEMENTATION == ER_IMPL_FREERTOS   // Valid selection.
+#elif ER_IMPLEMENTATION == ER_IMPL_POSIX      // Valid selection.
+#elif ER_IMPLEMENTATION == ER_IMPL_BAREMETAL  // Valid selection.
+#else
+#error "ER_IMPLEMENTATION has an invalid value."
 #endif
 
 //==============================================================================
