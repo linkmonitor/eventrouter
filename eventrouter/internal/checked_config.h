@@ -87,6 +87,17 @@
 #endif
 
 //==============================================================================
+// Configuration Calculation
+// ==============================================================================
+// Derived event router configurations, based on other configurations.
+
+// Both the POSIX and FreeRTOS implementations require OS abstractions.
+#if (ER_IMPLEMENTATION == ER_IMPL_FREERTOS) || \
+    (ER_IMPLEMENTATION == ER_IMPL_POSIX)
+#define ER_CONFIG_OS
+#endif
+
+//==============================================================================
 // Core Configuration
 //==============================================================================
 
