@@ -21,7 +21,7 @@
 #include "eventrouter/internal/task_.h"
 
 /// Extensions only available in the baremetal implementation.
-#ifdef ER_BAREMETAL
+#if ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
 #include "eventrouter/internal/eventrouter_baremetal.h"
 #endif
 
