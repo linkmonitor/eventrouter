@@ -43,6 +43,10 @@ extern "C"
         /// Returns true if the current execution context is an interrupt
         /// service routine.
         bool (*m_IsInIsr)(void);
+
+        /// Returns the current time in milliseconds; this function must return
+        /// non-decreasing values.
+        int64_t (*m_GetTimeMs)(void);
 #endif
     } ErOptions_t;
 
@@ -124,6 +128,15 @@ extern "C"
     /// This function MUST be called from the task that owns `a_module`; it MUST
     /// NOT be called from an interrupt or a callback.
     void ErUnsubscribe(ErModule_t *a_module, ErEventType_t a_event_type);
+
+    /// Blocks until the next event sent to the current task is received, and
+    /// returns it; asserts if called from an interrupt.
+    ErEvent_t *ErReceive(void);
+
+    /// Blocks until either the next event sent to the current task is received
+    /// or `a_ms` milliseconds have passed. This function returns NULL on
+    /// timeout and asserts if called from an interrupt.
+    ErEvent_t *ErTimedReceive(int a_ms);
 
     //============================================================================
     // Implementation-Specific Functions
