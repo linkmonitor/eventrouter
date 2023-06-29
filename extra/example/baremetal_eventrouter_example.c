@@ -2,7 +2,6 @@
 #include <unistd.h>
 
 #include "eventrouter.h"
-#include "eventrouter/internal/eventrouter_baremetal.h"
 #include "module_data_logger.h"
 #include "module_data_uploader.h"
 #include "module_sensor_data_publisher.h"
