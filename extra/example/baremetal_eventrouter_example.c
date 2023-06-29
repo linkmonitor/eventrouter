@@ -22,7 +22,9 @@ static ErTask_t s_er_task = {
 static ErOptions_t s_er_options = {
     .m_tasks     = &s_er_task,
     .m_num_tasks = 1,
-    .m_IsInIsr   = NULL,
+#ifdef ER_CONFIG_OS
+    .m_IsInIsr = NULL,
+#endif
 };
 
 int main(void)
