@@ -20,15 +20,14 @@
 #include "eventrouter/internal/module.h"
 #include "eventrouter/internal/task_.h"
 
-/// Extensions only available in the baremetal implementation.
-#if ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
-#include "eventrouter/internal/eventrouter_baremetal.h"
-#endif
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+    //============================================================================
+    // Functions available in all implementations.
+    //============================================================================
 
     /// These parameters define how an instance of the event router behaves. Any
     /// instance of this struct which is passed to a `ErInit_t`
@@ -123,6 +122,21 @@ extern "C"
     /// This function MUST be called from the task that owns `a_module`; it MUST
     /// NOT be called from an interrupt or a callback.
     void ErUnsubscribe(ErModule_t *a_module, ErEventType_t a_event_type);
+
+    //============================================================================
+    // Implementation-Specific Functions
+    //============================================================================
+
+#if ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
+    /// Must be called at the beginning of a new event loop.
+    void ErNewLoop(void);
+
+    /// Returns events that are scheduled for delivery this loop. Clients should
+    /// call this in a loop until it returns NULL and pass all non-NULL events
+    /// to `ErCallHandlers()`. Events which are not delivered this loop will be
+    /// delivered on the next loop (or whenever they first get a chance).
+    ErEvent_t *ErGetEventToDeliver(void);
+#endif
 
 #ifdef __cplusplus
 }

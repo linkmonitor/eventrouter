@@ -1,7 +1,6 @@
 #include "eventrouter.h"
 
 #include "eventrouter/internal/event_type.h"
-#include "eventrouter/internal/eventrouter_baremetal.h"
 #include "gtest/gtest.h"
 #include "mock_module.h"
 
