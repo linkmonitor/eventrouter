@@ -6,10 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "FreeRTOS.h"
-#include "queue.h"
-#include "task.h"
-
 #include "bitref.h"
 #include "defs.h"
 #include "os_functions.h"
@@ -18,6 +14,10 @@
 /// the dispatch strategy in `ErSend()`.
 #define TASK_SEND_LIMIT (32)
 
+//==============================================================================
+// Static Variables
+//==============================================================================
+
 static struct
 {
     bool m_initialized;
@@ -25,11 +25,12 @@ static struct
     ErOsFunctions_t m_os_functions;
 } s_context;
 
-static bool IsInIsr(void)
-{
-    ER_ASSERT(s_context.m_initialized);
-    return s_context.m_options->m_IsInIsr();
-}
+//==============================================================================
+// Implementation-Specific Functions.
+//==============================================================================
+
+#if ER_IMPLEMENTATION == ER_IMPL_FREERTOS
+static bool IsInIsr(void);  // Forward declaration.
 
 static void DefaultSendEvent(QueueHandle_t a_queue, void *a_event)
 {
@@ -58,6 +59,22 @@ static void DefaultSendEvent(QueueHandle_t a_queue, void *a_event)
 static TaskHandle_t DefaultGetCurrentTaskHandle(void)
 {
     return xTaskGetCurrentTaskHandle();
+}
+#elif ER_IMPLEMENTATION == ER_IMPL_POSIX
+/* TODO(jjaoudi): Implement these appropriately.*/
+#else
+#error "Unsupported ER_IMPLEMENTATION selected."
+#endif
+
+//==============================================================================
+// Core, OS-Agnostic Implementation
+//==============================================================================
+
+/// Returns true if the system is inside an interrupt handler.
+static bool IsInIsr(void)
+{
+    ER_ASSERT(s_context.m_initialized);
+    return s_context.m_options->m_IsInIsr();
 }
 
 /// Asserts if the contents of the `ErOptions_t` struct are invalid and
@@ -164,7 +181,7 @@ void ErInit(const ErOptions_t *a_options)
 {
     ER_ASSERT(!s_context.m_initialized);
     ValidateAndInitializeOptions(a_options);
-    s_context.m_options        = a_options;
+    s_context.m_options      = a_options;
     s_context.m_os_functions = (ErOsFunctions_t){
         .SendEvent            = DefaultSendEvent,
         .GetCurrentTaskHandle = DefaultGetCurrentTaskHandle,
@@ -296,7 +313,7 @@ void ErSendEx(ErEvent_t *a_event, ErSendExOptions_t a_options)
         if (subscribed_task_count == 0)
         {
             s_context.m_os_functions.SendEvent(sending_task->m_event_queue,
-                                                 a_event);
+                                               a_event);
             return;
         }
     }
