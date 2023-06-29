@@ -58,7 +58,9 @@ struct MockOptions
     ErOptions_t m_options{
         .m_tasks     = &m_task,
         .m_num_tasks = 1,
-        .m_IsInIsr   = IsInIsr,
+#ifdef ER_CONFIG_OS
+        .m_IsInIsr = IsInIsr,
+#endif
     };
 };
 

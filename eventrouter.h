@@ -39,9 +39,11 @@ extern "C"
         const ErTask_t *m_tasks;
         size_t m_num_tasks;
 
+#ifdef ER_CONFIG_OS
         /// Returns true if the current execution context is an interrupt
         /// service routine.
         bool (*m_IsInIsr)(void);
+#endif
     } ErOptions_t;
 
     /// Initializes the event router based on the options provided and must be

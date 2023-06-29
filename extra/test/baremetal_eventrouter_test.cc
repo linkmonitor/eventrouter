@@ -40,7 +40,6 @@ struct MockOptions
     const ErOptions_t m_options{
         .m_tasks     = m_tasks,
         .m_num_tasks = 1,
-        .m_IsInIsr   = nullptr,
     };
 };
 
