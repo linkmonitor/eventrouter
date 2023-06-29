@@ -32,7 +32,7 @@ static struct
 #if ER_IMPLEMENTATION == ER_IMPL_FREERTOS
 static bool IsInIsr(void);  // Forward declaration.
 
-static void DefaultSendEvent(QueueHandle_t a_queue, void *a_event)
+static void DefaultSendEvent(ErQueueHandle_t a_queue, void *a_event)
 {
     if (IsInIsr())
     {
@@ -56,7 +56,7 @@ static void DefaultSendEvent(QueueHandle_t a_queue, void *a_event)
     }
 }
 
-static TaskHandle_t DefaultGetCurrentTaskHandle(void)
+static ErTaskHandle_t DefaultGetCurrentTaskHandle(void)
 {
     return xTaskGetCurrentTaskHandle();
 }
