@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "atomic.h"
+#include "defs.h"
 #include "event_type.h"
 #include "module.h"
 
