@@ -14,6 +14,10 @@ extern "C"
 {
 #endif
 
+    /// Operating system functions for which there is a safe default. Do not add
+    /// functions to this struct if a safe default is not possible; consider
+    /// promoting those functions to a field in `ErOptions_t` and add the
+    /// appropriate checks in all implementations.
     typedef struct
     {
         void (*SendEvent)(ErQueueHandle_t a_queue, void *a_event);
