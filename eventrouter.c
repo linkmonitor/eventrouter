@@ -1,8 +1,8 @@
 #include "eventrouter/internal/checked_config.h"
 
-#if defined(ER_FREERTOS)
+#ifdef ER_CONFIG_OS
 #include "eventrouter/internal/eventrouter_freertos.c"
-#elif defined(ER_BAREMETAL)
+#elif ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
 #include "eventrouter/internal/eventrouter_baremetal.c"
 #include "eventrouter/internal/list.c"
 #else
