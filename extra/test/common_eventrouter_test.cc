@@ -186,7 +186,7 @@ class EventRouterTest : public Test
     {
         ErEvent_t *event = nullptr;
 #ifdef ER_CONFIG_OS
-        if (MockOs::AnyUnhandledEvents()) event = MockOs::ReceiveEvent();
+        if (MockOs::AnyUnhandledEvents()) event = ErReceive();
 #endif
 
 #if ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
