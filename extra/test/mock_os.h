@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include "eventrouter.h"
+#include "eventrouter/internal/defs.h"
 #include "eventrouter/internal/os_functions.h"
 
 /// Implements the OS interactions used by the Event Router.
@@ -87,8 +88,30 @@ struct MockOs
 
     static TaskHandle_t GetCurrentTaskHandle() { return m_running_task; }
 
+    static void ReceiveEvent(QueueHandle_t a_queue, ErEvent_t **a_event)
+    {
+        assert(a_queue != nullptr);
+        assert(a_event != nullptr);
+        auto &queue = m_sent_events[a_queue];
+        assert(queue.size() > 0);
+        ErEvent_t *event = queue.front();
+        queue.pop();
+        *a_event = event;
+    }
+
+    static bool TimedReceiveEvent(QueueHandle_t a_queue, ErEvent_t **a_event,
+                                  int64_t a_ms)
+    {
+        // We don't have good way to test blocking calls presently.
+        ER_UNUSED(a_ms);
+        ReceiveEvent(a_queue, a_event);
+        return true;
+    }
+
     static constexpr ErOsFunctions_t m_os_functions = {
         .SendEvent            = SendEvent,
+        .ReceiveEvent         = ReceiveEvent,
+        .TimedReceiveEvent    = TimedReceiveEvent,
         .GetCurrentTaskHandle = GetCurrentTaskHandle,
     };
 };

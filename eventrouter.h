@@ -136,7 +136,7 @@ extern "C"
     /// Blocks until either the next event sent to the current task is received
     /// or `a_ms` milliseconds have passed. This function returns NULL on
     /// timeout and asserts if called from an interrupt.
-    ErEvent_t *ErTimedReceive(int a_ms);
+    ErEvent_t *ErTimedReceive(int64_t a_ms);
 
     //============================================================================
     // Implementation-Specific Functions

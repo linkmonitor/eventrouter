@@ -7,6 +7,8 @@
 #error "These functions only apply to OS-backed implementations."
 #endif
 
+#include <stdbool.h>
+
 #include "os_types.h"
 
 #ifdef __cplusplus
@@ -21,6 +23,9 @@ extern "C"
     typedef struct
     {
         void (*SendEvent)(ErQueueHandle_t a_queue, void *a_event);
+        void (*ReceiveEvent)(ErQueueHandle_t a_queue, ErEvent_t **a_event);
+        bool (*TimedReceiveEvent)(ErQueueHandle_t a_queue, ErEvent_t **a_event,
+                                  int64_t a_ms);
         ErTaskHandle_t (*GetCurrentTaskHandle)(void);
     } ErOsFunctions_t;
 
