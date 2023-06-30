@@ -18,7 +18,7 @@ gtest_discover_tests(baremetal_eventrouter_test)
 
 add_executable(freertos_eventrouter_test
   common_eventrouter_test.cc
-  freertos_eventrouter_test.cc
+  os_eventrouter_test.cc
   mock_os.cc
 )
 target_link_libraries(freertos_eventrouter_test PRIVATE
