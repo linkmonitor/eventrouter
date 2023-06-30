@@ -65,7 +65,7 @@ struct MockOs
 
     static void ClearUnhandledEvents() { m_sent_events.clear(); }
 
-    static void AdvanceTimeMs(TickType_t a_delta_ms) { m_now_ms += a_delta_ms; }
+    static void AdvanceTimeMs(int64_t a_delta_ms) { m_now_ms += a_delta_ms; }
 
     static bool IsInIsr(void) { return false; }
 
