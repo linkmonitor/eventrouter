@@ -98,13 +98,12 @@ struct MockOs
         *a_event = event;
     }
 
-    static bool TimedReceiveEvent(QueueHandle_t a_queue, ErEvent_t **a_event,
+    static void TimedReceiveEvent(ErQueueHandle_t a_queue, ErEvent_t **a_event,
                                   int64_t a_ms)
     {
         // We don't have good way to test blocking calls presently.
         ER_UNUSED(a_ms);
         ReceiveEvent(a_queue, a_event);
-        return true;
     }
 
     static constexpr ErOsFunctions_t m_os_functions = {

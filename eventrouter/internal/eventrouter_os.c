@@ -61,10 +61,10 @@ static void DefaultReceiveEvent(ErQueueHandle_t a_queue, ErEvent_t **a_event)
     ER_ASSERT(pdTRUE == xQueueReceive(a_queue, a_event, portMAX_DELAY));
 }
 
-static bool DefaultTimedReceiveEvent(ErQueueHandle_t a_queue,
+static void DefaultTimedReceiveEvent(ErQueueHandle_t a_queue,
                                      ErEvent_t **a_event, int64_t a_ms)
 {
-    return (pdTRUE == xQueueReceive(a_queue, a_event, pdMS_TO_TICKS(a_ms)));
+    xQueueReceive(a_queue, a_event, pdMS_TO_TICKS(a_ms));
 }
 
 static ErTaskHandle_t DefaultGetCurrentTaskHandle(void)
