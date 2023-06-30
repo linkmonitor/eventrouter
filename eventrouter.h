@@ -152,6 +152,10 @@ extern "C"
     /// call this in a loop until it returns NULL and pass all non-NULL events
     /// to `ErCallHandlers()`. Events which are not delivered this loop will be
     /// delivered on the next loop (or whenever they first get a chance).
+    ///
+    /// NOTE: It's tempting to combine this function with `ErReceive()` because
+    /// it has an identical signature, but it has different semantics; baremetal
+    /// functions are not allowed to block, and this should be called in a loop.
     ErEvent_t *ErGetEventToDeliver(void);
 #endif
 
