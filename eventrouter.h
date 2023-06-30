@@ -30,8 +30,8 @@ extern "C"
     //============================================================================
 
     /// These parameters define how an instance of the event router behaves. Any
-    /// instance of this struct which is passed to a `ErInit_t`
-    /// function MUST NOT be modified or freed once passed.
+    /// instance of this struct which is passed to a `ErInit_t` function MUST
+    /// NOT be modified or freed once passed.
     typedef struct
     {
         /// These fields list all tasks that can participate in event routing.
