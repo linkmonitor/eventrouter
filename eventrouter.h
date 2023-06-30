@@ -129,6 +129,11 @@ extern "C"
     /// NOT be called from an interrupt or a callback.
     void ErUnsubscribe(ErModule_t *a_module, ErEventType_t a_event_type);
 
+    //============================================================================
+    // Implementation-Specific Functions
+    //============================================================================
+
+#ifdef ER_CONFIG_OS
     /// Blocks until the next event sent to the current task is received, and
     /// returns it; asserts if called from an interrupt.
     ErEvent_t *ErReceive(void);
@@ -137,10 +142,7 @@ extern "C"
     /// or `a_ms` milliseconds have passed. This function returns NULL on
     /// timeout and asserts if called from an interrupt.
     ErEvent_t *ErTimedReceive(int64_t a_ms);
-
-    //============================================================================
-    // Implementation-Specific Functions
-    //============================================================================
+#endif
 
 #if ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
     /// Must be called at the beginning of a new event loop.
