@@ -56,6 +56,17 @@ static void DefaultSendEvent(ErQueueHandle_t a_queue, void *a_event)
     }
 }
 
+static void DefaultReceiveEvent(ErQueueHandle_t a_queue, ErEvent_t **a_event)
+{
+    ER_ASSERT(pdTRUE == xQueueReceive(a_queue, a_event, portMAX_DELAY));
+}
+
+static bool DefaultTimedReceiveEvent(ErQueueHandle_t a_queue,
+                                     ErEvent_t **a_event, int64_t a_ms)
+{
+    return (pdTRUE == xQueueReceive(a_queue, a_event, pdMS_TO_TICKS(a_ms)));
+}
+
 static ErTaskHandle_t DefaultGetCurrentTaskHandle(void)
 {
     return xTaskGetCurrentTaskHandle();
@@ -600,6 +611,8 @@ void ErSetOsFunctions(const ErOsFunctions_t *a_fns)
     ER_ASSERT(s_context.m_initialized);
     ER_ASSERT(a_fns != NULL);
     ER_ASSERT(a_fns->SendEvent != NULL);
+    ER_ASSERT(a_fns->ReceiveEvent != NULL);
+    ER_ASSERT(a_fns->TimedReceiveEvent != NULL);
     ER_ASSERT(a_fns->GetCurrentTaskHandle != NULL);
 
     s_context.m_os_functions = *a_fns;
