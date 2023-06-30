@@ -72,7 +72,40 @@ static ErTaskHandle_t DefaultGetCurrentTaskHandle(void)
     return xTaskGetCurrentTaskHandle();
 }
 #elif ER_IMPLEMENTATION == ER_IMPL_POSIX
-/* TODO(jjaoudi): Implement these appropriately.*/
+static void DefaultSendEvent(ErQueueHandle_t a_queue, void *a_event)
+{
+    mq_send(a_queue, (const char *)&a_event, (sizeof(ErEvent_t *)), 1);
+}
+
+static void DefaultReceiveEvent(ErQueueHandle_t a_queue, ErEvent_t **a_event)
+{
+    ssize_t s = mq_receive(a_queue, (char *)a_event, sizeof(ErEvent_t *), NULL);
+    ER_ASSERT(s == sizeof(ErEvent_t *));
+}
+
+static void DefaultTimedReceiveEvent(ErQueueHandle_t a_queue,
+                                     ErEvent_t **a_event, int64_t a_ms)
+{
+    const struct timespec timeout = {};
+    ssize_t s = mq_timedreceive(a_queue, (char *)a_event, sizeof(ErEvent_t *),
+                                NULL, &timeout);
+
+    // The only acceptable outcomes are a timeout or receiving an event;
+    // everything else is a fatal error.
+    if (s == -1)
+    {
+        ER_ASSERT(errno == ETIMEDOUT);
+    }
+    else
+    {
+        ER_ASSERT(s == sizeof(ErEvent_t *));
+    }
+}
+
+static ErTaskHandle_t DefaultGetCurrentTaskHandle(void)
+{
+    return pthread_self();
+}
 #else
 #error "Unsupported ER_IMPLEMENTATION selected."
 #endif
@@ -195,6 +228,8 @@ void ErInit(const ErOptions_t *a_options)
     s_context.m_options      = a_options;
     s_context.m_os_functions = (ErOsFunctions_t){
         .SendEvent            = DefaultSendEvent,
+        .ReceiveEvent         = DefaultReceiveEvent,
+        .TimedReceiveEvent    = DefaultTimedReceiveEvent,
         .GetCurrentTaskHandle = DefaultGetCurrentTaskHandle,
     };
     s_context.m_initialized = true;
@@ -620,7 +655,8 @@ ErEvent_t *ErTimedReceive(int64_t a_ms)
     const ErTask_t *task =
         &s_context.m_options->m_tasks[GetIndexOfCurrentTask()];
     ErEvent_t *event = NULL;
-    s_context.m_os_functions.TimedReceiveEvent(task->m_event_queue, &event, a_ms);
+    s_context.m_os_functions.TimedReceiveEvent(task->m_event_queue, &event,
+                                               a_ms);
     return event;
 }
 
