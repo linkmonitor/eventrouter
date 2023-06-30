@@ -19,8 +19,7 @@ void GenericTask_Run(void *a_parameters)
         /// Wait to receive events and then call the appropriate handlers; this
         /// involves both delivering events to subscribers and returning events
         /// to the modules that sent them.
-        ErEvent_t *event = NULL;
-        xQueueReceive(options->m_input_queue, &event, portMAX_DELAY);
+        ErEvent_t *event = ErReceive();
         ErCallHandlers(event);
     }
 
