@@ -606,6 +606,25 @@ void ErUnsubscribe(ErModule_t *a_module, ErEventType_t a_event_type)
     }
 }
 
+ErEvent_t *ErReceive(void)
+{
+    const ErTask_t *task =
+        &s_context.m_options->m_tasks[GetIndexOfCurrentTask()];
+    ErEvent_t *event = NULL;
+    s_context.m_os_functions.ReceiveEvent(task->m_event_queue, &event);
+    ER_ASSERT(event != NULL);
+    return event;
+}
+
+ErEvent_t *ErTimedReceive(int64_t a_ms)
+{
+    const ErTask_t *task =
+        &s_context.m_options->m_tasks[GetIndexOfCurrentTask()];
+    ErEvent_t *event = NULL;
+    s_context.m_os_functions.TimedReceiveEvent(task->m_event_queue, &event, a_ms);
+    return event;
+}
+
 void ErSetOsFunctions(const ErOsFunctions_t *a_fns)
 {
     ER_ASSERT(s_context.m_initialized);
