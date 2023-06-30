@@ -48,8 +48,8 @@ struct MockOptions
 
     ErTask_t m_task{
 #ifdef ER_CONFIG_OS
-        .m_task_handle = (TaskHandle_t)1,
-        .m_event_queue = (QueueHandle_t)1,
+        .m_task_handle = (ErTaskHandle_t)1,
+        .m_event_queue = (ErQueueHandle_t)1,
 #endif
         .m_modules     = m_modules,
         .m_num_modules = kNumModules,
