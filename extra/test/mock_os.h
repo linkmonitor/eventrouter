@@ -28,7 +28,7 @@ struct MockOs
         m_sent_events.clear();
     }
 
-    static void SwitchTask(TaskHandle_t a_task) { m_running_task = a_task; }
+    static void SwitchTask(ErTaskHandle_t a_task) { m_running_task = a_task; }
 
     static ErEvent_t *ReceiveEvent()
     {
@@ -70,8 +70,8 @@ struct MockOs
     static bool IsInIsr(void) { return false; }
 
     static ErOptions_t m_event_router_options;
-    static TaskHandle_t m_running_task;
-    static std::unordered_map<QueueHandle_t, std::queue<ErEvent_t *>>
+    static ErTaskHandle_t m_running_task;
+    static std::unordered_map<ErQueueHandle_t, std::queue<ErEvent_t *>>
         m_sent_events;
     static int64_t m_now_ms;
 
@@ -80,14 +80,14 @@ struct MockOs
     // arguments or allow tests to specify return values.
     // ==========================================================================
 
-    static void SendEvent(QueueHandle_t a_queue, void *a_event)
+    static void SendEvent(ErQueueHandle_t a_queue, void *a_event)
     {
         m_sent_events[a_queue].push((ErEvent_t *)a_event);
     }
 
-    static TaskHandle_t GetCurrentTaskHandle() { return m_running_task; }
+    static ErTaskHandle_t GetCurrentTaskHandle() { return m_running_task; }
 
-    static void ReceiveEvent(QueueHandle_t a_queue, ErEvent_t **a_event)
+    static void ReceiveEvent(ErQueueHandle_t a_queue, ErEvent_t **a_event)
     {
         assert(a_queue != 0);
         assert(a_event != nullptr);

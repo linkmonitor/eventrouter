@@ -158,7 +158,7 @@ static bool IsEventSendable(ErEvent_t *a_event)
 static size_t GetIndexOfCurrentTask(void)
 {
     const ErOptions_t *options = s_context.m_options;
-    const TaskHandle_t current_task =
+    const ErTaskHandle_t current_task =
         s_context.m_os_functions.GetCurrentTaskHandle();
 
     int task_idx = -1;
