@@ -17,7 +17,12 @@
 #define ErTaskHandle_t  TaskHandle_t
 #define ErQueueHandle_t QueueHandle_t
 #elif ER_IMPLEMENTATION == ER_IMPL_POSIX
-// TODO(jjaoudi): Implement this when possible.
+#include <errno.h>
+#include <mqueue.h>  // Not supported on Mac. Must consider platform-independent
+                     // queueing mechanisms.
+#include <pthread.h>
+#define ErTaskHandle_t  pthread_t
+#define ErQueueHandle_t mqd_t
 #elif
 #error "Unexpected value in ER_IMPLEMENTATION"
 #endif
