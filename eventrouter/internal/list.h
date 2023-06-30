@@ -3,7 +3,7 @@
 
 #include "checked_config.h"
 
-#ifndef ER_BAREMETAL
+#if ER_IMPLEMENTATION != ER_IMPL_BAREMETAL
 #error "Linked list logic is only needed in the baremetal implementation"
 #endif
 

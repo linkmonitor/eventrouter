@@ -189,7 +189,7 @@ class EventRouterTest : public Test
         if (MockOs::AnyUnhandledEvents()) event = MockOs::ReceiveEvent();
 #endif
 
-#ifdef ER_BAREMETAL
+#if ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
         event = ErGetEventToDeliver();
 #endif
         if (event) ErCallHandlers(event);
@@ -200,7 +200,7 @@ class EventRouterTest : public Test
     // to `MaybeDeliverEvent()`.
     void PrepareToDeliverEvents()
     {
-#ifdef ER_BAREMETAL
+#if ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
         ErNewLoop();
 #endif
     }
