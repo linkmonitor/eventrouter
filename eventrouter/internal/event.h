@@ -8,7 +8,7 @@
 #include "event_type.h"
 #include "module.h"
 
-#ifdef ER_BAREMETAL
+#if ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
 #include "list.h"
 #endif
 
@@ -26,7 +26,7 @@ extern "C"
         ErEventType_t m_type;
         atomic_int m_reference_count;
         ErModule_t *m_sending_module;
-#ifdef ER_BAREMETAL
+#if ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
         ErList_t m_next;
 #endif
     } ErEvent_t;
@@ -45,7 +45,7 @@ extern "C"
         a_event->m_type            = a_type;
         a_event->m_reference_count = 0;
         a_event->m_sending_module  = a_module;
-#ifdef ER_BAREMETAL
+#if ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
         a_event->m_next.m_next = NULL;
 #endif
     }
@@ -86,18 +86,18 @@ extern "C"
     /// Initialize the event fields of a struct which mixes-in `ErEvent_t`
     /// behavior. This differs from `ErEventInit_t` in that it can be used in
     /// static definitions using designated initializers.
-#ifdef ER_BAREMETAL
+#if ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
 #define INIT_ER_EVENT(a_type, a_module)                          \
     .ER_EVENT_MEMBER = {.m_type            = a_type,             \
                         .m_reference_count = INIT_ATOMIC_INT(0), \
                         .m_sending_module  = a_module,           \
                         .m_next.m_next     = NULL}
-#else /* !ER_BAREMETAL */
+#else /* ER_IMPLEMENTATION != ER_IMPL_BAREMETAL */
 #define INIT_ER_EVENT(a_type, a_module)                          \
     .ER_EVENT_MEMBER = {.m_type            = a_type,             \
                         .m_reference_count = INIT_ATOMIC_INT(0), \
                         .m_sending_module  = a_module}
-#endif /* ER_BAREMETAL */
+#endif
 
 #ifdef __cplusplus
 }
