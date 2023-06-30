@@ -43,10 +43,6 @@ extern "C"
         /// Returns true if the current execution context is an interrupt
         /// service routine.
         bool (*m_IsInIsr)(void);
-
-        /// Returns the current time in milliseconds; this function must return
-        /// non-decreasing values.
-        int64_t (*m_GetTimeMs)(void);
 #endif
     } ErOptions_t;
 

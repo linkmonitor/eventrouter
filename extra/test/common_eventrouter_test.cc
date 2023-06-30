@@ -60,7 +60,6 @@ struct MockOptions
         .m_num_tasks = 1,
 #ifdef ER_CONFIG_OS
         .m_IsInIsr   = IsInIsr,
-        .m_GetTimeMs = MockOs::GetTimeMs,
 #endif
     };
 };

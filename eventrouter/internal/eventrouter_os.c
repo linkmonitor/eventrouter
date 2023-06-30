@@ -96,7 +96,6 @@ static void ValidateAndInitializeOptions(const ErOptions_t *a_options)
     ER_ASSERT(a_options->m_tasks != NULL);
     ER_ASSERT(a_options->m_num_tasks > 0);
     ER_ASSERT(a_options->m_IsInIsr != NULL);
-    ER_ASSERT(a_options->m_GetTimeMs != NULL);
 
     ER_STATIC_ASSERT(ER_EVENT_TYPE__COUNT > 0,
                      "There must be at least one type to route");
