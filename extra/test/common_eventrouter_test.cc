@@ -4,7 +4,7 @@
 #include "gtest/gtest.h"
 #include "mock_module.h"
 
-#ifdef ER_FREERTOS
+#ifdef ER_CONFIG_OS
 #include "mock_os.h"
 #endif
 
@@ -47,7 +47,7 @@ struct MockOptions
     /// supports single-task systems.
 
     ErTask_t m_task{
-#ifdef ER_FREERTOS
+#ifdef ER_CONFIG_OS
         .m_task_handle = (TaskHandle_t)1,
         .m_event_queue = (QueueHandle_t)1,
 #endif
@@ -165,7 +165,7 @@ class EventRouterTest : public Test
     EventRouterTest()
     {
         ErInit(&m_options.m_options);
-#ifdef ER_FREERTOS
+#ifdef ER_CONFIG_OS
         ErSetOsFunctions(&MockOs::m_os_functions);
         MockOs::Init(&m_options.m_options);
         MockOs::SwitchTask(m_options.m_options.m_tasks[0].m_task_handle);
@@ -185,7 +185,7 @@ class EventRouterTest : public Test
     bool MaybeDeliverEvent()
     {
         ErEvent_t *event = nullptr;
-#ifdef ER_FREERTOS
+#ifdef ER_CONFIG_OS
         if (MockOs::AnyUnhandledEvents()) event = MockOs::ReceiveEvent();
 #endif
 
