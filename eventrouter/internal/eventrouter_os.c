@@ -107,8 +107,8 @@ static void ValidateAndInitializeOptions(const ErOptions_t *a_options)
     {
         const ErTask_t *task = &a_options->m_tasks[task_idx];
 
-        ER_ASSERT(task->m_task_handle != NULL);
-        ER_ASSERT(task->m_event_queue != NULL);
+        ER_ASSERT(task->m_task_handle != 0);
+        ER_ASSERT(task->m_event_queue != 0);
         ER_ASSERT(task->m_modules != NULL);
         ER_ASSERT(task->m_num_modules > 0);
 

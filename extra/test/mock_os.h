@@ -24,7 +24,7 @@ struct MockOs
     {
         m_now_ms               = 0;
         m_event_router_options = *a_options;
-        m_running_task         = nullptr;
+        m_running_task         = 0;
         m_sent_events.clear();
     }
 
@@ -32,7 +32,7 @@ struct MockOs
 
     static ErEvent_t *ReceiveEvent()
     {
-        QueueHandle_t running_task_queue = nullptr;
+        ErQueueHandle_t running_task_queue = 0;
         for (size_t idx = 0; idx < m_event_router_options.m_num_tasks; ++idx)
         {
             const ErTask_t *task = &m_event_router_options.m_tasks[idx];
@@ -42,7 +42,7 @@ struct MockOs
                 break;
             }
         }
-        assert(running_task_queue != nullptr);
+        assert(running_task_queue != 0);
         auto &queue = m_sent_events[running_task_queue];
         assert(queue.size() > 0);
 
@@ -89,7 +89,7 @@ struct MockOs
 
     static void ReceiveEvent(QueueHandle_t a_queue, ErEvent_t **a_event)
     {
-        assert(a_queue != nullptr);
+        assert(a_queue != 0);
         assert(a_event != nullptr);
         auto &queue = m_sent_events[a_queue];
         assert(queue.size() > 0);
