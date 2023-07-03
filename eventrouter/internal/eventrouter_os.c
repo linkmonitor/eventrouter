@@ -9,6 +9,7 @@
 #include "bitref.h"
 #include "defs.h"
 #include "os_functions.h"
+#include "queue_.h"
 
 /// The maximum number of tasks the Event Router can support without changing
 /// the dispatch strategy in `ErSend()`.
@@ -24,6 +25,18 @@ static struct
     const ErOptions_t *m_options;
     ErOsFunctions_t m_os_functions;
 } s_context;
+
+#if ER_IMPLEMENTATION == ER_IMPL_POSIX
+#include <pthread.h>
+// These variables are used to implement WaitUntilInitComplete() in the POSIX
+// implementation. WaitUntilInitComplete() is necessary because POSIX threads
+// execute as soon as they are created, which makes it impossible to create
+// tasks AND initialize the event router before those tasks might try to read
+// from an event router queue. WaitUntilInitComplete() blocks reads until
+// initialization completes to avoid issues.
+static pthread_mutex_t s_init_gate_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t s_init_gate_cond   = PTHREAD_COND_INITIALIZER;
+#endif
 
 //==============================================================================
 // Implementation-Specific Functions.
@@ -71,40 +84,44 @@ static ErTaskHandle_t DefaultGetCurrentTaskHandle(void)
 {
     return xTaskGetCurrentTaskHandle();
 }
+
+static void WaitUntilInitComplete(void)
+{
+    // FreeRTOS doesn't start tasks at creation; no delay is necessary.
+}
 #elif ER_IMPLEMENTATION == ER_IMPL_POSIX
 static void DefaultSendEvent(ErQueueHandle_t a_queue, void *a_event)
 {
-    mq_send(a_queue, (const char *)&a_event, (sizeof(ErEvent_t *)), 1);
+    ErQueuePushBack(a_queue, a_event);
 }
 
 static void DefaultReceiveEvent(ErQueueHandle_t a_queue, ErEvent_t **a_event)
 {
-    ssize_t s = mq_receive(a_queue, (char *)a_event, sizeof(ErEvent_t *), NULL);
-    ER_ASSERT(s == sizeof(ErEvent_t *));
+    *a_event = ErQueuePopFront(a_queue);
 }
 
 static void DefaultTimedReceiveEvent(ErQueueHandle_t a_queue,
                                      ErEvent_t **a_event, int64_t a_ms)
 {
-    const struct timespec timeout = {};
-    ssize_t s = mq_timedreceive(a_queue, (char *)a_event, sizeof(ErEvent_t *),
-                                NULL, &timeout);
-
-    // The only acceptable outcomes are a timeout or receiving an event;
-    // everything else is a fatal error.
-    if (s == -1)
-    {
-        ER_ASSERT(errno == ETIMEDOUT);
-    }
-    else
-    {
-        ER_ASSERT(s == sizeof(ErEvent_t *));
-    }
+    ErQueueTimedPopFront(a_queue, a_event, a_ms);
 }
 
 static ErTaskHandle_t DefaultGetCurrentTaskHandle(void)
 {
     return pthread_self();
+}
+
+static void WaitUntilInitComplete(void)
+{
+    while (!s_context.m_initialized)
+    {
+        pthread_mutex_lock(&s_init_gate_mutex);
+        if (!s_context.m_initialized)
+        {
+            pthread_cond_wait(&s_init_gate_cond, &s_init_gate_mutex);
+        }
+        pthread_mutex_unlock(&s_init_gate_mutex);
+    }
 }
 #else
 #error "Unsupported ER_IMPLEMENTATION selected."
@@ -232,7 +249,17 @@ void ErInit(const ErOptions_t *a_options)
         .TimedReceiveEvent    = DefaultTimedReceiveEvent,
         .GetCurrentTaskHandle = DefaultGetCurrentTaskHandle,
     };
+
+#if ER_IMPLEMENTATION == ER_IMPL_POSIX
+    pthread_mutex_lock(&s_init_gate_mutex);
+#endif
+
     s_context.m_initialized = true;
+
+#if ER_IMPLEMENTATION == ER_IMPL_POSIX
+    pthread_mutex_unlock(&s_init_gate_mutex);
+    pthread_cond_signal(&s_init_gate_cond);
+#endif
 }
 
 void ErDeinit(void)
@@ -642,6 +669,8 @@ void ErUnsubscribe(ErModule_t *a_module, ErEventType_t a_event_type)
 
 ErEvent_t *ErReceive(void)
 {
+    WaitUntilInitComplete();
+
     const ErTask_t *task =
         &s_context.m_options->m_tasks[GetIndexOfCurrentTask()];
     ErEvent_t *event = NULL;
@@ -652,6 +681,8 @@ ErEvent_t *ErReceive(void)
 
 ErEvent_t *ErTimedReceive(int64_t a_ms)
 {
+    WaitUntilInitComplete();
+
     const ErTask_t *task =
         &s_context.m_options->m_tasks[GetIndexOfCurrentTask()];
     ErEvent_t *event = NULL;
