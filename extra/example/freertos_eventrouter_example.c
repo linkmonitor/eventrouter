@@ -1,7 +1,6 @@
 #include <assert.h>
 
 #include "FreeRTOS.h"
-#include "queue.h"
 #include "task.h"
 #include "timers.h"
 
@@ -69,8 +68,7 @@ int main(void)
     };
     TaskHandle_t sensor_task_handle;
     GenericTaskOptions_t sensor_task_options = {
-        .m_input_queue = xQueueCreate(SENSOR_TASK__QUEUE_LENGTH,
-                                      SENSOR_TASK__QUEUE_ELEMENT_SIZE),
+        .m_input_queue = ErQueueNew(SENSOR_TASK__QUEUE_LENGTH),
     };
     assert(pdPASS == xTaskCreate(GenericTask_Run, "Sensor Task",
                                  SENSOR_TASK__STACK_SIZE, &sensor_task_options,
@@ -86,8 +84,7 @@ int main(void)
     };
     TaskHandle_t app_task_handle;
     GenericTaskOptions_t app_task_options = {
-        .m_input_queue =
-            xQueueCreate(APP_TASK__QUEUE_LENGTH, APP_TASK__QUEUE_ELEMENT_SIZE),
+        .m_input_queue = ErQueueNew(APP_TASK__QUEUE_LENGTH),
     };
     assert(pdPASS == xTaskCreate(GenericTask_Run, "App Task",
                                  APP_TASK__STACK_SIZE, &app_task_options,
