@@ -51,12 +51,17 @@
 
 // In previous versions of the event router, clients specified ER_FREERTOS and
 // ER_BAREMETAL directly, instead of defining ER_IMPLEMENTATION. These checks
-// convert old choices to new ones for backward compatibility.
+// convert old choices to new ones for backward compatibility. They also make it
+// possible to specify an implementation from the command line; e.g., setting
+// `-DER_IMPLEMENTATION=ER_FREERTOS` on the command line doesn't work.
 #if defined(ER_FREERTOS) && defined(ER_BAREMETAL)
 #error "Only one of ER_FREERTOS and ER_BAREMETAL may be defined"
 #endif
 #if defined(ER_FREERTOS)
 #define ER_IMPLEMENTATION ER_IMPL_FREERTOS
+#endif
+#if defined(ER_POSIX)
+#define ER_IMPLEMENTATION ER_IMPL_POSIX
 #endif
 #if defined(ER_BAREMETAL)
 #define ER_IMPLEMENTATION ER_IMPL_BAREMETAL
