@@ -2,9 +2,6 @@
 
 #include <assert.h>
 
-#include "FreeRTOS.h"
-#include "queue.h"
-
 #include "eventrouter.h"
 
 void GenericTask_Run(void *a_parameters)
@@ -12,7 +9,7 @@ void GenericTask_Run(void *a_parameters)
     const GenericTaskOptions_t *options = (GenericTaskOptions_t *)a_parameters;
 
     assert(options != NULL);
-    assert(options->m_input_queue != NULL);
+    assert(options->m_input_queue != 0);
 
     while (true)
     {
