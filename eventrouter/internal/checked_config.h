@@ -73,8 +73,6 @@
 // Make sure ER_IMPLEMENTATION is valid and provide a default if necessary.
 #if !defined(ER_IMPLEMENTATION)
 #define ER_IMPLEMENTATION ER_IMPLEMENTATION_DEFAULT
-#elif 1 - ER_IMPLEMENTATION - 1 == 2  // Detect "#define ER_IMPLEMENTATION".
-#error "ER_IMPLEMENTATION cannot be defined with no body."
 #elif ER_IMPLEMENTATION == ER_IMPL_FREERTOS   // Valid selection.
 #elif ER_IMPLEMENTATION == ER_IMPL_POSIX      // Valid selection.
 #elif ER_IMPLEMENTATION == ER_IMPL_BAREMETAL  // Valid selection.
