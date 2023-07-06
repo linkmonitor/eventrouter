@@ -113,7 +113,7 @@ ErEvent_t* ErQueuePopFront(ErQueue_t a_queue)
         // it) then go back to waiting on the condition variable.
         if (q->m_size > 0)
         {
-            result = read(a_queue);
+            result = read(q);
             pthread_mutex_unlock(&q->m_mutex);
             pthread_cond_signal(&q->m_cond);  // Notify blocked writers.
             break;
