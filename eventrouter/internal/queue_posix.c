@@ -114,8 +114,8 @@ ErEvent_t* ErQueuePopFront(ErQueue_t a_queue)
         if (q->m_size > 0)
         {
             result = read(q);
-            pthread_mutex_unlock(&q->m_mutex);
             pthread_cond_signal(&q->m_cond);  // Notify blocked writers.
+            pthread_mutex_unlock(&q->m_mutex);
             break;
         }
         else
@@ -145,8 +145,8 @@ void ErQueuePushBack(ErQueue_t a_queue, ErEvent_t* a_event)
         if (q->m_size < q->m_capacity)
         {
             write(q, a_event);
-            pthread_mutex_unlock(&q->m_mutex);
             pthread_cond_signal(&q->m_cond);  // Notify blocked readers.
+            pthread_mutex_unlock(&q->m_mutex);
             break;
         }
         else
@@ -182,8 +182,8 @@ bool ErQueueTimedPopFront(ErQueue_t a_queue, ErEvent_t** a_event, int64_t a_ms)
         if (q->m_size > 0)
         {
             *a_event = read(q);
-            pthread_mutex_unlock(&q->m_mutex);
             pthread_cond_signal(&q->m_cond);  // Notify blocked writers.
+            pthread_mutex_unlock(&q->m_mutex);
             result = true;
             break;
         }
@@ -222,8 +222,8 @@ bool ErQueueTimedPushBack(ErQueue_t a_queue, ErEvent_t* a_event, int64_t a_ms)
         if (q->m_size < q->m_capacity)
         {
             write(q, a_event);
-            pthread_mutex_unlock(&q->m_mutex);
             pthread_cond_signal(&q->m_cond);  // Notify blocked readers.
+            pthread_mutex_unlock(&q->m_mutex);
             result = true;
             break;
         }
