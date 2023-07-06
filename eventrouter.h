@@ -138,9 +138,8 @@ extern "C"
     /// or `a_ms` milliseconds have passed. This function returns NULL on
     /// timeout and asserts if called from an interrupt.
     ErEvent_t *ErTimedReceive(int64_t a_ms);
-#endif
 
-#if ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
+#elif ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
     /// Must be called at the beginning of a new event loop.
     void ErNewLoop(void);
 
