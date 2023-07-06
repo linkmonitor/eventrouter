@@ -257,8 +257,8 @@ void ErInit(const ErOptions_t *a_options)
     s_context.m_initialized = true;
 
 #if ER_IMPLEMENTATION == ER_IMPL_POSIX
-    pthread_mutex_unlock(&s_init_gate_mutex);
     pthread_cond_signal(&s_init_gate_cond);
+    pthread_mutex_unlock(&s_init_gate_mutex);
 #endif
 }
 
