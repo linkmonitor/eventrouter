@@ -91,38 +91,36 @@ ErEvent_t* ErQueuePopFront(ErQueue_t a_queue)
     ErEvent_t* result = 0;
 
     // Block until there is data in the queue.
+    pthread_mutex_lock(&q->m_mutex);
     while (1)
     {
         // Check the condition and while holding the mutex to avoid a race.
-        pthread_mutex_lock(&q->m_mutex);
         if (q->m_size == 0)
         {
             pthread_cond_wait(&q->m_cond, &q->m_mutex);
         }
-        // At this point one of two things is true:
-        //
-        //   1. m_size was greater than zero.
-        //   2. m_size was initially zero and then the condition was signaled.
-        //
-        // Since we don't know which happened we must check the condition again;
-        // `pthread_cond_broadcast()` wakes more than one thread and another
-        // thread could have read the data first.
-        //
-        // If there is data in the queue consume it, release the lock and break
-        // out of the loop. If there isn't any data (because another thread read
-        // it) then go back to waiting on the condition variable.
-        if (q->m_size > 0)
-        {
-            result = read(q);
-            pthread_cond_broadcast(&q->m_cond);  // Notify blocked writers.
-            pthread_mutex_unlock(&q->m_mutex);
-            break;
-        }
         else
         {
-            pthread_mutex_unlock(&q->m_mutex);
+            // At this point one of two things is true:
+            //
+            //   1. m_size was greater than zero.
+            //   2. m_size was initially zero and then the condition was
+            //   signaled.
+            //
+            // Since we don't know which happened we must check the condition
+            // again; `pthread_cond_broadcast()` wakes more than one thread and
+            // another thread could have read the data first.
+            //
+            // If there is data in the queue consume it, release the lock and
+            // break out of the loop. If there isn't any data (because another
+            // thread read it) then go back to waiting on the condition
+            // variable.
+            result = read(q);
+            pthread_cond_broadcast(&q->m_cond);  // Notify blocked writers.
+            break;
         }
     }
+    pthread_mutex_unlock(&q->m_mutex);
 
     return result;
 }
@@ -135,25 +133,21 @@ void ErQueuePushBack(ErQueue_t a_queue, ErEvent_t* a_event)
 
     Queue_t* q = a_queue;
 
+    pthread_mutex_lock(&q->m_mutex);
     while (1)
     {
-        pthread_mutex_lock(&q->m_mutex);
         if (q->m_size == q->m_capacity)
         {
             pthread_cond_wait(&q->m_cond, &q->m_mutex);
         }
-        if (q->m_size < q->m_capacity)
+        else
         {
             write(q, a_event);
             pthread_cond_broadcast(&q->m_cond);  // Notify blocked readers.
-            pthread_mutex_unlock(&q->m_mutex);
             break;
         }
-        else
-        {
-            pthread_mutex_unlock(&q->m_mutex);
-        }
     }
+    pthread_mutex_unlock(&q->m_mutex);
 }
 
 // NOTE: The structure and motivations of this function are similar to that of
@@ -166,32 +160,27 @@ bool ErQueueTimedPopFront(ErQueue_t a_queue, ErEvent_t** a_event, int64_t a_ms)
     bool result        = false;
     Queue_t* q         = a_queue;
 
+    pthread_mutex_lock(&q->m_mutex);
     while (1)
     {
-        pthread_mutex_lock(&q->m_mutex);
         if (q->m_size == 0)
         {
             if (pthread_cond_timedwait(&q->m_cond, &q->m_mutex, &ts) ==
                 ETIMEDOUT)
             {
                 result = false;
-                pthread_mutex_unlock(&q->m_mutex);
                 break;
             }
         }
-        if (q->m_size > 0)
+        else
         {
             *a_event = read(q);
             pthread_cond_broadcast(&q->m_cond);  // Notify blocked writers.
-            pthread_mutex_unlock(&q->m_mutex);
             result = true;
             break;
         }
-        else
-        {
-            pthread_mutex_unlock(&q->m_mutex);
-        }
     }
+    pthread_mutex_unlock(&q->m_mutex);
 
     return result;
 }
@@ -206,32 +195,27 @@ bool ErQueueTimedPushBack(ErQueue_t a_queue, ErEvent_t* a_event, int64_t a_ms)
     bool result        = false;
     Queue_t* q         = a_queue;
 
+    pthread_mutex_lock(&q->m_mutex);
     while (1)
     {
-        pthread_mutex_lock(&q->m_mutex);
         if (q->m_size == q->m_capacity)
         {
             if (pthread_cond_timedwait(&q->m_cond, &q->m_mutex, &ts) ==
                 ETIMEDOUT)
             {
                 result = false;
-                pthread_mutex_unlock(&q->m_mutex);
                 break;
             }
         }
-        if (q->m_size < q->m_capacity)
+        else
         {
             write(q, a_event);
             pthread_cond_broadcast(&q->m_cond);  // Notify blocked readers.
-            pthread_mutex_unlock(&q->m_mutex);
             result = true;
             break;
         }
-        else
-        {
-            pthread_mutex_unlock(&q->m_mutex);
-        }
     }
+    pthread_mutex_unlock(&q->m_mutex);
 
     return result;
 }
