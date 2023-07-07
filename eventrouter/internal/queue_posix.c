@@ -105,8 +105,8 @@ ErEvent_t* ErQueuePopFront(ErQueue_t a_queue)
         //   2. m_size was initially zero and then the condition was signaled.
         //
         // Since we don't know which happened we must check the condition again;
-        // `pthread_cond_signal()` can wake more than one thread on some
-        // systems, and another thread could have read the data first.
+        // `pthread_cond_broadcast()` wakes more than one thread and another
+        // thread could have read the data first.
         //
         // If there is data in the queue consume it, release the lock and break
         // out of the loop. If there isn't any data (because another thread read
@@ -114,7 +114,7 @@ ErEvent_t* ErQueuePopFront(ErQueue_t a_queue)
         if (q->m_size > 0)
         {
             result = read(q);
-            pthread_cond_signal(&q->m_cond);  // Notify blocked writers.
+            pthread_cond_broadcast(&q->m_cond);  // Notify blocked writers.
             pthread_mutex_unlock(&q->m_mutex);
             break;
         }
@@ -145,7 +145,7 @@ void ErQueuePushBack(ErQueue_t a_queue, ErEvent_t* a_event)
         if (q->m_size < q->m_capacity)
         {
             write(q, a_event);
-            pthread_cond_signal(&q->m_cond);  // Notify blocked readers.
+            pthread_cond_broadcast(&q->m_cond);  // Notify blocked readers.
             pthread_mutex_unlock(&q->m_mutex);
             break;
         }
@@ -182,7 +182,7 @@ bool ErQueueTimedPopFront(ErQueue_t a_queue, ErEvent_t** a_event, int64_t a_ms)
         if (q->m_size > 0)
         {
             *a_event = read(q);
-            pthread_cond_signal(&q->m_cond);  // Notify blocked writers.
+            pthread_cond_broadcast(&q->m_cond);  // Notify blocked writers.
             pthread_mutex_unlock(&q->m_mutex);
             result = true;
             break;
@@ -222,7 +222,7 @@ bool ErQueueTimedPushBack(ErQueue_t a_queue, ErEvent_t* a_event, int64_t a_ms)
         if (q->m_size < q->m_capacity)
         {
             write(q, a_event);
-            pthread_cond_signal(&q->m_cond);  // Notify blocked readers.
+            pthread_cond_broadcast(&q->m_cond);  // Notify blocked readers.
             pthread_mutex_unlock(&q->m_mutex);
             result = true;
             break;
