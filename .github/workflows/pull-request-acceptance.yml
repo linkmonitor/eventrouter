@@ -28,3 +28,6 @@ jobs:
       - name: FreeRTOS Tests
         working-directory: extra
         run: ./build/test/freertos_eventrouter_test
+      - name: POSIX Tests
+        working-directory: extra
+        run: ./build/test/posix_eventrouter_test
