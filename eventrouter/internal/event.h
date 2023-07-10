@@ -91,7 +91,8 @@ extern "C"
     .ER_EVENT_MEMBER = {.m_type            = a_type,             \
                         .m_reference_count = INIT_ATOMIC_INT(0), \
                         .m_sending_module  = a_module,           \
-                        .m_next.m_next     = NULL}
+                        .m_next = { .m_next = NULL },            \
+    }
 #else /* ER_IMPLEMENTATION != ER_IMPL_BAREMETAL */
 #define INIT_ER_EVENT(a_type, a_module)                          \
     .ER_EVENT_MEMBER = {.m_type            = a_type,             \
