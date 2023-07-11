@@ -69,6 +69,8 @@ struct MockOs
 
     static bool IsInIsr(void) { return false; }
 
+    static int64_t GetTimeMs(void) { return m_now_ms; }
+
     static ErOptions_t m_event_router_options;
     static ErTaskHandle_t m_running_task;
     static std::unordered_map<ErQueueHandle_t, std::queue<ErEvent_t *>>
