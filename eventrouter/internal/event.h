@@ -8,6 +8,10 @@
 #include "event_type.h"
 #include "module.h"
 
+#ifdef ER_CONFIG_OS
+#include "atom_lock.h"
+#endif
+
 #if ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
 #include "list.h"
 #endif
@@ -26,7 +30,9 @@ extern "C"
         ErEventType_t m_type;
         atomic_int m_reference_count;
         ErModule_t *m_sending_module;
-#if ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
+#ifdef ER_CONFIG_OS
+        ErAtomLock_t m_lock;
+#elif ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
         ErList_t m_next;
 #endif
     } ErEvent_t;
@@ -45,7 +51,9 @@ extern "C"
         a_event->m_type            = a_type;
         a_event->m_reference_count = 0;
         a_event->m_sending_module  = a_module;
-#if ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
+#ifdef ER_CONFIG_OS
+        atomic_flag_clear(&a_event->m_lock);
+#elif ER_IMPLEMENTATION == ER_IMPL_BAREMETAL
         a_event->m_next.m_next = NULL;
 #endif
     }
@@ -97,7 +105,8 @@ extern "C"
 #define INIT_ER_EVENT(a_type, a_module)                          \
     .ER_EVENT_MEMBER = {.m_type            = a_type,             \
                         .m_reference_count = INIT_ATOMIC_INT(0), \
-                        .m_sending_module  = a_module}
+                        .m_sending_module  = a_module,           \
+                        .m_lock            = ER_ATOM_LOCK_INIT}
 #endif
 
 #ifdef __cplusplus
