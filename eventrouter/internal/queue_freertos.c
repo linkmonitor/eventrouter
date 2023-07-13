@@ -45,7 +45,7 @@ void ErQueuePushBack(ErQueue_t a_queue, ErEvent_t *a_event)
 
 bool ErQueueTimedPopFront(ErQueue_t a_queue, ErEvent_t **a_event, int64_t a_ms)
 {
-    BaseType_t ret   = xQueueReceive(a_queue, &a_event, pdMS_TO_TICKS(a_ms));
+    BaseType_t ret = xQueueReceive(a_queue, a_event, pdMS_TO_TICKS(a_ms));
     return (ret == pdTRUE);
 }
 
