@@ -1,6 +1,10 @@
 #ifndef EVENTROUTER_EVENTROUTER_H
 #define EVENTROUTER_EVENTROUTER_H
 
+///=============================================================================
+/// Overview
+///=============================================================================
+///
 /// The Event Router is responsible for transporting events sent by one module
 /// to all modules which are interested in events of that type, and then
 /// returning that event to the sending module.
@@ -15,6 +19,126 @@
 /// The Event Router tracks each module's interest in specific event types using
 /// a subscription metaphor. Modules can subscribe to event types or unsubscribe
 /// from them at any time using `ErSubscribe()` and its counterpart.
+///
+/// There are some interesting caveats related to sending and handling events;
+/// they are explored here.
+///
+///=============================================================================
+/// Ownership
+///=============================================================================
+///
+/// The Event Router assumes that tasks own modules and that modules own events.
+/// Tasks own the modules in the `m_modules` field of their `ErTask_t` struct.
+/// Modules own the events that list them as their `m_sending_module`; modules
+/// should statically allocate every event they own.
+///
+///                      Task ----> Module ----> Event
+///
+/// Each event is owned by exactly one module, which is owned by exactly one
+/// task in turn. Some sections below reference an "event's owning task". This
+/// is the task that owns the module that owns the event. The concept of a task
+/// owning an event only exists to avoid typing "the task that owns the module
+/// that owns this event" over and over again.
+///
+///=============================================================================
+/// Sending Events
+///=============================================================================
+///
+/// Events have a lifecycle.
+///
+/// Events are "idle" when initialized and transition to "in flight" once sent.
+/// Once sent, events are delivered to all subscribing modules before they are
+/// returned to their owning-module's event handler, at which point they
+/// transition back to idle; modules can only send idle events.
+///
+///         ┌────────▶─────┐              ┌───────▶──────┐
+///         │              │              │              │
+///         │   ┌──────────┼──────────┐   │   ┌──────────┼──────────┐
+///         │   │Task A    ▼          │   │   │Task B    ▼ ErCallHandlers()
+///         │   │┌─────────┴─────────┐│   │   │┌─────────┴─────────┐│
+///         │   ││   Subscriber 4    ││   │   ││   Subscriber 1    ││
+///         │   │└─────────┬─────────┘│   ▲   │└─────────┬─────────┘│
+///         │   │┌─────────▼─────────┐│   │   │┌─────────┴─────────┐│
+///         │   ││   Owning Module   │├───┘   ││   Subscriber 2    ││
+///         ▲   │└───────────────── ErSend()  │└─────────┬─────────┘│
+///         │   └─────────────────────┘       └──────────┼──────────┘
+///         │                                            │
+///         │                                 ┌──────────┼──────────┐
+///         │                                 │Task C    ▼ ErCallHandlers()
+///         │                                 │┌─────────┴─────────┐│
+///         │                                 ││   Subscriber 3    ││
+///         │                                 │└─────────┬─────────┘│
+///         │                                 └──────────┼──────────┘
+///         └────────◀────────────────────────────────◀──┘
+///
+/// This lifecycle limits how often an event is sent and prevents senders (that
+/// follow the rules) from modifying the contents of an event while subscribers
+/// access it (remember, events are sent by reference).
+///
+/// The diagram and descriptions above discuss the *standard* lifecycle: the
+/// owning module sends an event and none of the subscribing module KEEP it. The
+/// sections below discuss how the lifecycle changes when either:
+///
+///   1. An event is sent from a non-owning task; or
+///   2. Subscribers KEEP events.
+///
+/// An event's owning module may check whether it is in flight by passing it to
+/// `ErEventIsInFlight()`; modules MUST not call `ErEventIsInFlight()` on events
+/// they do not own.
+///
+///=============================================================================
+/// Claiming Events
+///=============================================================================
+///
+/// Sending events from tasks other than their owning tasks requires an extra
+/// step to avoid race conditions and data corruption. Clients must first claim
+/// an event with `ErTryClaim()` before sending them with `ErSend()`. This looks
+/// like the following:
+///
+///     if (ErTryClaim(&event)) {
+///       // The event was claimed; modify it as necessary then send.
+///       event.m_value = 1; // Capture some data.
+///       ErSend(&event);
+///     } else {
+///       // The event was claimed elsewhere; you can't send it right now.
+///     }
+///
+/// It's CRITICALLY IMPORTANT to claim the event before modifying it because, if
+/// its already claimed, other modules may be reading the data from the event.
+///
+/// To see where this might be useful, consider the following: there is a module
+/// that owns a serial bus and it provides a function called `StartBusInit()`
+/// that can be called from any task. Internally, the function sends an event to
+/// itself (if possible) to make it thread safe. By using `ErTryClaim()`, all
+/// calls to `StartBusInit()` can tell whether a previous call is in progress
+/// (they failed to claim the event) or they successfully initiated the process
+/// (they claimed the event and called `ErSend()`).
+///
+/// It's safe to call `ErTryClaim()` in the owning task but it may be overkill.
+/// If an event is ALWAYS sent from the owning-module, use `ErEventIsInFlight()`
+/// to see whether it's safe to send an event. If an event is EVER sent from
+/// logic in a non-owning task, use `ErTryClaim()`+`ErSend()`.
+///
+///=============================================================================
+/// Keeping Events
+///=============================================================================
+///
+/// Sometimes, a subscriber may want to hold on to an event and delay its return
+/// to the owning module (maybe the event has a pointer to a large data buffer
+/// and the subscriber needs time to process the contents).
+///
+/// Subscribers can KEEP events by returning `ER_EVENT_HANDLER_RET__KEPT` from
+/// their handler when they receive them. If a module KEEPS an event, it MUST
+/// call `ErReturnToSender()` when it's done with the event, or the event will
+/// remain in flight forever.
+///
+/// It is an error for a subscriber to call `ErReturnToSender()` on an event
+/// BEFORE returning `ER_EVENT_HANDLER_RET__KEPT` from their handler.
+///
+/// One use for this feature is to wait until a number of subscribers are ready.
+/// The premise is that one module sends an event and all the subscribers KEEP
+/// that event until they finish getting ready. Once the event comes back to the
+/// owning module, it knows that all the subscribers have finished preparations.
 
 #include "eventrouter/internal/event.h"
 #include "eventrouter/internal/module.h"
