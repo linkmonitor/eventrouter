@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "atom_lock.h"
 #include "bitref.h"
 #include "defs.h"
 #include "os_functions.h"
@@ -204,8 +205,8 @@ static bool IsEventSendable(ErEvent_t *a_event)
 }
 
 /// Returns the index of the task in `s_context.m_options->m_tasks` that
-/// corresponds with the currently running task.
-static size_t GetIndexOfCurrentTask(void)
+/// corresponds with the currently running task or -1 if not found.
+static int GetIndexOfCurrentTaskUnsafe(void)
 {
     const ErOptions_t *options = s_context.m_options;
     const ErTaskHandle_t current_task =
@@ -220,6 +221,14 @@ static size_t GetIndexOfCurrentTask(void)
             break;
         }
     }
+
+    return task_idx;
+}
+
+/// Like `GetIndexOfCurrentTaskUnsafe()` but asserts if the task is not found.
+static size_t GetIndexOfCurrentTask(void)
+{
+    int task_idx = GetIndexOfCurrentTaskUnsafe();
 
     if (task_idx == -1)
     {
@@ -286,6 +295,27 @@ void ErSendEx(ErEvent_t *a_event, ErSendExOptions_t a_options)
     const bool sending_module_subscribed =
         *module_bit_ref.m_byte & module_bit_ref.m_bit_mask;
     ER_ASSERT(!sending_module_subscribed);
+
+    // Sending an event from a non-owning task requires that the caller
+    // previously called `ErTryClaim()` first. We try to claim the lock both to
+    // give us information about whether it was claimed previously, and to claim
+    // it for sends from within the owning task.
+
+    const bool already_claimed    = !ErAtomLockTryTake(&a_event->m_lock);
+    const size_t sending_task_idx = a_event->m_sending_module->m_task_idx;
+    const ErTask_t *sending_task =
+        &s_context.m_options->m_tasks[sending_task_idx];
+
+    const int current_task_idx = GetIndexOfCurrentTaskUnsafe();
+    const ErTask_t *current_task =
+        (current_task_idx >= 0)
+            ? &s_context.m_options->m_tasks[current_task_idx]
+            : NULL;
+
+    if ((current_task != sending_task) && !already_claimed)
+    {
+        ER_ASSERT(!"Event was sent from a non-owning task without claiming it");
+    }
 
     // When an event is sent its reference count is incremented by the number of
     // tasks that should receive the event plus one; each task that receives the
@@ -363,10 +393,6 @@ void ErSendEx(ErEvent_t *a_event, ErSendExOptions_t a_options)
 
     // The reference count may NEVER go negative.
     ER_ASSERT(old_reference_count >= 0);
-
-    const size_t sending_task_idx = a_event->m_sending_module->m_task_idx;
-    const ErTask_t *sending_task =
-        &s_context.m_options->m_tasks[sending_task_idx];
 
     // NOTE: This block is the trickiest logic in the module; any modifications
     // to it require careful consideration and heavy testing.
@@ -602,6 +628,18 @@ void ErReturnToSender(ErEvent_t *a_event)
     if (atomic_load(&a_event->m_reference_count) == 0)
     {
         a_event->m_sending_module->m_handler(a_event);
+
+        // The event remains claimed while delivered to the sending-module's
+        // event handler to prevent other tasks from claiming the event and
+        // modifying it while the handler looks at it.
+        //
+        // Once handled, we should free the lock to let other tasks claim the
+        // event, UNLESS the handler re-sent the event first, in which case we
+        // let the event remain claimed.
+        if (atomic_load(&a_event->m_reference_count) == 0)
+        {
+            ErAtomLockGive(&a_event->m_lock);
+        }
     }
 }
 
@@ -665,6 +703,14 @@ void ErUnsubscribe(ErModule_t *a_module, ErEventType_t a_event_type)
             GetBitRef((atomic_char *)task->m_subscriptions, a_event_type);
         atomic_fetch_and(task_bit_ref.m_byte, ~task_bit_ref.m_bit_mask);
     }
+}
+
+bool ErTryClaim(ErEvent_t *a_event)
+{
+    ER_ASSERT(s_context.m_initialized);
+    ER_ASSERT(a_event != NULL);
+    ER_ASSERT(IsEventSendable(a_event));
+    return ErAtomLockTryTake(&a_event->m_lock);
 }
 
 ErEvent_t *ErReceive(void)

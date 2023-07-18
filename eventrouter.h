@@ -130,6 +130,13 @@ extern "C"
     //============================================================================
 
 #ifdef ER_CONFIG_OS
+    /// Returns true if the caller successfully claimed the event and false
+    /// otherwise. Callers in non-owning tasks must claim events before sending
+    /// them with `ErSend()` or `ErSendEx()`; the implementation checks this and
+    /// asserts if violated. For more information see "Claiming Events" section
+    /// at the top of this file.
+    bool ErTryClaim(ErEvent_t *a_event);
+
     /// Blocks until the next event sent to the current task is received, and
     /// returns it; asserts if called from an interrupt.
     ErEvent_t *ErReceive(void);
