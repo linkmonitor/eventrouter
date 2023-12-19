@@ -5,12 +5,8 @@
 /// in both C and C++ files.
 #ifdef __cplusplus
 #include <atomic>
-#ifndef atomic_int
-#define atomic_int std::atomic<int>
-#endif
-#ifndef atomic_flag
-#define atomic_flag std::atomic_flag
-#endif
+using std::atomic_int;
+using std::atomic_flag;
 // Add more aliases here if necessary.
 #else
 #include <stdatomic.h>
