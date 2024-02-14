@@ -19,7 +19,7 @@
 #elif ER_IMPLEMENTATION == ER_IMPL_POSIX
 #include <pthread.h>
 #define ErTaskHandle_t pthread_t
-#elif
+#else
 #error "Unexpected value in ER_IMPLEMENTATION"
 #endif
 
