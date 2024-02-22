@@ -89,7 +89,7 @@ extern "C"
     /// `a_event_p`. The developer must ensure that `a_type` is correct. This
     /// macro returns the surrounding struct by value instead of by reference.
 #define FROM_ER_EVENT(a_event_p, a_type) \
-    (*container_of(a_event_p, a_type, ER_EVENT_MEMBER))
+    (*er_container_of(a_event_p, a_type, ER_EVENT_MEMBER))
 
     /// Initialize the event fields of a struct which mixes-in `ErEvent_t`
     /// behavior. This differs from `ErEventInit_t` in that it can be used in

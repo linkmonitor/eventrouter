@@ -226,7 +226,7 @@ ErEvent_t *ErGetEventToDeliver(void)
     ErList_t *node = &s_context.m_events.m_deliver_now;
     if (node->m_next != NULL)
     {
-        ret          = container_of(node->m_next, ErEvent_t, m_next);
+        ret          = er_container_of(node->m_next, ErEvent_t, m_next);
         node->m_next = node->m_next->m_next;
         ret->m_next.m_next = NULL;
     }
