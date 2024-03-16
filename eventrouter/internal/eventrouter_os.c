@@ -3,6 +3,7 @@
 #include <limits.h>
 #include <stdatomic.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -479,8 +480,15 @@ void ErSendEx(ErEvent_t *a_event, ErSendExOptions_t a_options)
     }
     else
     {
-        // The event was already sent, make sure it can be re-sent.
-        ER_ASSERT(EventResendingAllowed(&a_options, sending_task_idx));
+        if (!EventResendingAllowed(&a_options, sending_task_idx))
+        {
+            printf("!EventResendingAllowed, will be assert");
+            printf("a_event->m_sending_module = %p", a_event->m_sending_module);
+            printf("a_event->m_type = %d", a_event->m_type);
+
+            // The event was already sent, make sure it can be re-sent.
+            ER_ASSERT(0);
+        }
 
         // The event is already in flight but it has not yet consumed the 1 in
         // the reference count dedicated to returning it to the sending module's
