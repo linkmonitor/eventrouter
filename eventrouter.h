@@ -87,39 +87,6 @@
 /// they do not own.
 ///
 ///=============================================================================
-/// Claiming Events
-///=============================================================================
-///
-/// Sending events from tasks other than their owning tasks requires an extra
-/// step to avoid race conditions and data corruption. Clients must first claim
-/// an event with `ErTryClaim()` before sending them with `ErSend()`. This looks
-/// like the following:
-///
-///     if (ErTryClaim(&event)) {
-///       // The event was claimed; modify it as necessary then send.
-///       event.m_value = 1; // Capture some data.
-///       ErSend(&event);
-///     } else {
-///       // The event was claimed elsewhere; you can't send it right now.
-///     }
-///
-/// It's CRITICALLY IMPORTANT to claim the event before modifying it because, if
-/// its already claimed, other modules may be reading the data from the event.
-///
-/// To see where this might be useful, consider the following: there is a module
-/// that owns a serial bus and it provides a function called `StartBusInit()`
-/// that can be called from any task. Internally, the function sends an event to
-/// itself (if possible) to make it thread safe. By using `ErTryClaim()`, all
-/// calls to `StartBusInit()` can tell whether a previous call is in progress
-/// (they failed to claim the event) or they successfully initiated the process
-/// (they claimed the event and called `ErSend()`).
-///
-/// It's safe to call `ErTryClaim()` in the owning task but it may be overkill.
-/// If an event is ALWAYS sent from the owning-module, use `ErEventIsInFlight()`
-/// to see whether it's safe to send an event. If an event is EVER sent from
-/// logic in a non-owning task, use `ErTryClaim()`+`ErSend()`.
-///
-///=============================================================================
 /// Keeping Events
 ///=============================================================================
 ///
