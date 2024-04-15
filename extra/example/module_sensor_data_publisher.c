@@ -17,9 +17,7 @@ static SensorDataEvent_t s_event = {
 
 void SensorDataPublisher_GenerateData()
 {
-#ifdef ER_CONFIG_OS
-    if (ErTryClaim(TO_ER_EVENT(s_event)))
-#endif
+    if (!ErEventIsInFlight(&s_event.m_event))
     {
         s_event.m_temperature_c = rand() % 100;
         s_event.m_lux           = rand() % 50;
