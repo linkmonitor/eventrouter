@@ -3,6 +3,7 @@
 #include <limits.h>
 #include <stdatomic.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -11,9 +12,28 @@
 #include "os_functions.h"
 #include "queue_.h"
 
+//==============================================================================
+// Macros and Defines
+//==============================================================================
+
 /// The maximum number of tasks the Event Router can support without changing
 /// the dispatch strategy in `ErSend()`.
 #define TASK_SEND_LIMIT (32)
+
+/// Print information about `a_event` before asserting.
+#define ER_ASSERT_E(a_cond, a_event)                                      \
+    do                                                                    \
+    {                                                                     \
+        bool failure     = !(a_cond);                                     \
+        ErEvent_t *event = (ErEvent_t *)a_event;                          \
+        if (failure)                                                      \
+        {                                                                 \
+            printf("Error with event: %p, Type: %d, Module: %p\n", event, \
+                   event->m_type, event->m_sending_module);               \
+                                                                          \
+            ER_ASSERT(false);                                             \
+        }                                                                 \
+    } while (0)
 
 //==============================================================================
 // Static Variables
@@ -52,9 +72,10 @@ static void DefaultSendEvent(ErQueueHandle_t a_queue, void *a_event)
         // The logic for detecting a higher-priority task and yielding to it is
         // taken directly the documentation for `xQueueSendToBackFromISR()`.
         BaseType_t higher_priority_task_was_woken = pdFALSE;
-        ER_ASSERT(pdTRUE ==
-                  xQueueSendToBackFromISR(a_queue, &a_event,
-                                          &higher_priority_task_was_woken));
+        ER_ASSERT_E(
+            pdTRUE == xQueueSendToBackFromISR(a_queue, &a_event,
+                                              &higher_priority_task_was_woken),
+            a_event);
 
         if (higher_priority_task_was_woken)
         {
@@ -63,15 +84,16 @@ static void DefaultSendEvent(ErQueueHandle_t a_queue, void *a_event)
     }
     else
     {
-        // TODO(jjaoudi): Replace this with a function that prints a
-        // diagnostic when posting to full queue in debug builds.
-        ER_ASSERT(pdTRUE == xQueueSendToBack(a_queue, &a_event, portMAX_DELAY));
+        ER_ASSERT_E(
+            pdTRUE == xQueueSendToBack(a_queue, &a_event, portMAX_DELAY),
+            a_event);
     }
 }
 
 static void DefaultReceiveEvent(ErQueueHandle_t a_queue, ErEvent_t **a_event)
 {
-    ER_ASSERT(pdTRUE == xQueueReceive(a_queue, a_event, portMAX_DELAY));
+    ER_ASSERT_E(pdTRUE == xQueueReceive(a_queue, a_event, portMAX_DELAY),
+                *a_event);
 }
 
 static void DefaultTimedReceiveEvent(ErQueueHandle_t a_queue,
@@ -272,7 +294,7 @@ void ErSendEx(ErEvent_t *a_event, ErSendExOptions_t a_options)
 {
     ER_ASSERT(s_context.m_initialized);
     ER_ASSERT(a_event != NULL);
-    ER_ASSERT(IsEventSendable(a_event));
+    ER_ASSERT_E(IsEventSendable(a_event), a_event);
 
     // Modules are not allowed to subscribe to event types that they send. If
     // that were allowed then one event handler could receive an event twice in
@@ -285,7 +307,7 @@ void ErSendEx(ErEvent_t *a_event, ErSendExOptions_t a_options)
 
     const bool sending_module_subscribed =
         *module_bit_ref.m_byte & module_bit_ref.m_bit_mask;
-    ER_ASSERT(!sending_module_subscribed);
+    ER_ASSERT_E(!sending_module_subscribed, a_event);
 
     // When an event is sent its reference count is incremented by the number of
     // tasks that should receive the event plus one; each task that receives the
@@ -362,7 +384,7 @@ void ErSendEx(ErEvent_t *a_event, ErSendExOptions_t a_options)
         atomic_fetch_add(&a_event->m_reference_count, subscribed_task_count);
 
     // The reference count may NEVER go negative.
-    ER_ASSERT(old_reference_count >= 0);
+    ER_ASSERT_E(old_reference_count >= 0, a_event);
 
     const size_t sending_task_idx = a_event->m_sending_module->m_task_idx;
     const ErTask_t *sending_task =
@@ -393,7 +415,8 @@ void ErSendEx(ErEvent_t *a_event, ErSendExOptions_t a_options)
     else if (old_reference_count == 1)
     {
         // The event was already sent, make sure it can be re-sent.
-        ER_ASSERT(EventResendingAllowed(&a_options, sending_task_idx));
+        ER_ASSERT_E(EventResendingAllowed(&a_options, sending_task_idx),
+                    a_event);
 
         // If the old reference count is 1, then all subscribers from the
         // previous send received the event, the last subscriber's task has
@@ -454,7 +477,8 @@ void ErSendEx(ErEvent_t *a_event, ErSendExOptions_t a_options)
     else
     {
         // The event was already sent, make sure it can be re-sent.
-        ER_ASSERT(EventResendingAllowed(&a_options, sending_task_idx));
+        ER_ASSERT_E(EventResendingAllowed(&a_options, sending_task_idx),
+                    a_event);
 
         // The event is already in flight but it has not yet consumed the 1 in
         // the reference count dedicated to returning it to the sending module's
@@ -483,7 +507,7 @@ void ErCallHandlers(ErEvent_t *a_event)
 {
     ER_ASSERT(s_context.m_initialized);
     ER_ASSERT(a_event != NULL);
-    ER_ASSERT(IsEventTypeRoutable(a_event->m_type));
+    ER_ASSERT_E(IsEventTypeRoutable(a_event->m_type), a_event);
 
     /// This logic is needed to handle the case where the sending module and
     /// subscribing modules live in the same task. If the reference count is
@@ -540,7 +564,7 @@ void ErReturnToSender(ErEvent_t *a_event)
 {
     ER_ASSERT(s_context.m_initialized);
     ER_ASSERT(a_event != NULL);
-    ER_ASSERT(IsEventSendable(a_event));
+    ER_ASSERT_E(IsEventSendable(a_event), a_event);
 
     const int previous_reference_count =
         atomic_fetch_sub(&a_event->m_reference_count, 1);
@@ -591,7 +615,8 @@ void ErReturnToSender(ErEvent_t *a_event)
             // Avoid an extra send by decrementing the reference count (as if we
             // sent it back) and then delivering the event to the sending
             // module's event handler below.
-            ER_ASSERT(1 == atomic_fetch_sub(&a_event->m_reference_count, 1));
+            ER_ASSERT_E(1 == atomic_fetch_sub(&a_event->m_reference_count, 1),
+                        a_event);
         }
     }
 
