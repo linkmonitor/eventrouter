@@ -21,18 +21,20 @@
 #define TASK_SEND_LIMIT (32)
 
 /// Print information about `a_event` before asserting.
-#define ER_ASSERT_E(a_cond, a_event)                                      \
-    do                                                                    \
-    {                                                                     \
-        bool failure     = !(a_cond);                                     \
-        ErEvent_t *event = (ErEvent_t *)a_event;                          \
-        if (failure)                                                      \
-        {                                                                 \
-            printf("Error with event: %p, Type: %d, Module: %p\n", event, \
-                   event->m_type, event->m_sending_module);               \
-                                                                          \
-            ER_ASSERT(false);                                             \
-        }                                                                 \
+#define ER_ASSERT_E(a_cond, a_event)                                           \
+    do                                                                         \
+    {                                                                          \
+        bool failure = true;                                                   \
+        /* Evaluate the condition in an if to catch assignment expressions. */ \
+        if (a_cond) failure = false;                                           \
+        ErEvent_t *event = (ErEvent_t *)a_event;                               \
+        if (failure)                                                           \
+        {                                                                      \
+            printf("Error with event: %p, Type: %d, Module: %p\n", event,      \
+                   event->m_type, event->m_sending_module);                    \
+                                                                               \
+            ER_ASSERT(false);                                                  \
+        }                                                                      \
     } while (0)
 
 //==============================================================================
