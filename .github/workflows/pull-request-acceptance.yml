@@ -22,5 +22,6 @@ jobs:
         run: |
           for implementation in baremetal freertos posix; do
             cmake -B build -S . -G Ninja -DIMPLEMENTATION=$implementation
+            cmake --build build
             cmake --build build --target test
           done
