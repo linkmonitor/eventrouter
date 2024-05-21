@@ -11,6 +11,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/FreeRTOSConfig.h
 #ifndef FREERTOSCONFIG_H
 #define FREERTOSCONFIG_H
 
+#include <pthread.h>
 #include <stdbool.h>
 
 /// These values come from starting with an empty file and silencing compiler
@@ -18,7 +19,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/FreeRTOSConfig.h
 /// necessary for the Event Router to function.
 
 #define configMAX_PRIORITIES         10
-#define configMINIMAL_STACK_SIZE     1024
+#define configMINIMAL_STACK_SIZE     PTHREAD_STACK_MIN
 #define configTICK_RATE_HZ           1000
 #define configTOTAL_HEAP_SIZE        (1024 * 1024)
 #define configUSE_16_BIT_TICKS       false
@@ -41,4 +42,7 @@ set(FREERTOS_PORT GCC_POSIX CACHE STRING "")
 FetchContent_MakeAvailable(freertos)
 target_link_options(freertos_kernel PUBLIC
   $<$<PLATFORM_ID:Linux>:-pthread>
+)
+target_include_directories(freertos_kernel PUBLIC
+  ${CMAKE_CURRENT_BINARY_DIR}
 )
