@@ -65,6 +65,10 @@ static pthread_cond_t s_init_gate_cond   = PTHREAD_COND_INITIALIZER;
 //==============================================================================
 
 #if ER_IMPLEMENTATION == ER_IMPL_FREERTOS
+
+#include "FreeRTOS.h"
+#include "queue.h"
+
 static bool IsInIsr(void);  // Forward declaration.
 
 static void DefaultSendEvent(ErQueueHandle_t a_queue, void *a_event)
@@ -543,7 +547,8 @@ void ErCallHandlers(ErEvent_t *a_event)
         if (module_is_subscribed)
         {
             // Deliver the event to the subscribed module.
-            const ErEventHandlerRet_t ret = module->m_handler(a_event);
+            const ErEventHandlerRet_t ret =
+                module->m_handler(a_event, module->m_context);
 
             if (ret == ER_EVENT_HANDLER_RET__KEPT)
             {
@@ -628,7 +633,8 @@ void ErReturnToSender(ErEvent_t *a_event)
     // support the optimization mentioned a few lines up.
     if (atomic_load(&a_event->m_reference_count) == 0)
     {
-        a_event->m_sending_module->m_handler(a_event);
+        a_event->m_sending_module->m_handler(
+            a_event, a_event->m_sending_module->m_context);
     }
 }
 

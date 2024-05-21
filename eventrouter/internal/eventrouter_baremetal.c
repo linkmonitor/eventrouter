@@ -130,7 +130,8 @@ void ErCallHandlers(ErEvent_t *a_event)
         if (module_is_subscribed)
         {
             // Deliver the event to the subscribed module.
-            const ErEventHandlerRet_t ret = module->m_handler(a_event);
+            const ErEventHandlerRet_t ret =
+                module->m_handler(a_event, module->m_context);
 
             if (ret == ER_EVENT_HANDLER_RET__KEPT)
             {
@@ -175,7 +176,8 @@ void ErReturnToSender(ErEvent_t *a_event)
         ErListRemove(&s_context.m_events.m_kept, &a_event->m_next);
 
         // All subscribed modules have received the event; return to its sender.
-        a_event->m_sending_module->m_handler(a_event);
+        a_event->m_sending_module->m_handler(
+            a_event, a_event->m_sending_module->m_context);
     }
 }
 
@@ -226,8 +228,8 @@ ErEvent_t *ErGetEventToDeliver(void)
     ErList_t *node = &s_context.m_events.m_deliver_now;
     if (node->m_next != NULL)
     {
-        ret          = er_container_of(node->m_next, ErEvent_t, m_next);
-        node->m_next = node->m_next->m_next;
+        ret                = er_container_of(node->m_next, ErEvent_t, m_next);
+        node->m_next       = node->m_next->m_next;
         ret->m_next.m_next = NULL;
     }
 

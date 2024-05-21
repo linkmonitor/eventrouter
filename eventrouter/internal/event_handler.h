@@ -29,7 +29,8 @@ extern "C"
 
     /// A function which accepts events and returns qualitative information
     /// about how that event was received.
-    typedef ErEventHandlerRet_t (*ErEventHandler_t)(struct ErEvent_t *a_event);
+    typedef ErEventHandlerRet_t (*ErEventHandler_t)(struct ErEvent_t* a_event,
+                                                    void* a_context);
 
 #ifdef __cplusplus
 }

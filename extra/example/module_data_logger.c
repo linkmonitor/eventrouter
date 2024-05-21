@@ -5,17 +5,20 @@
 #include "eventrouter.h"
 #include "module_sensor_data_publisher.h"
 
-static ErEventHandlerRet_t DataLogger_EventHandler(ErEvent_t* a_event);
+static ErEventHandlerRet_t DataLogger_EventHandler(ErEvent_t* a_event,
+                                                   void* a_context);
 
-ErModule_t g_data_logger_module = ER_CREATE_MODULE(DataLogger_EventHandler);
+ErModule_t g_data_logger_module =
+    ER_CREATE_MODULE(DataLogger_EventHandler, NULL);
 
 void DataLogger_Init(void)
 {
     ErSubscribe(&g_data_logger_module, ER_EVENT_TYPE__SENSOR_DATA);
 }
 
-ErEventHandlerRet_t DataLogger_EventHandler(ErEvent_t *a_event)
+ErEventHandlerRet_t DataLogger_EventHandler(ErEvent_t* a_event, void* a_context)
 {
+    ER_UNUSED(a_context);
     ErEventHandlerRet_t result = ER_EVENT_HANDLER_RET__HANDLED;
 
     switch (a_event->m_type)

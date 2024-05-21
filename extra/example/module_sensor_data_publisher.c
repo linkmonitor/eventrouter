@@ -6,10 +6,11 @@
 
 #include "eventrouter.h"
 
-static ErEventHandlerRet_t SensorDataPublisher_EventHandler(ErEvent_t *a_event);
+static ErEventHandlerRet_t SensorDataPublisher_EventHandler(ErEvent_t *a_event,
+                                                            void *a_context);
 
 ErModule_t g_sensor_data_publisher_module =
-    ER_CREATE_MODULE(SensorDataPublisher_EventHandler);
+    ER_CREATE_MODULE(SensorDataPublisher_EventHandler, NULL);
 
 static SensorDataEvent_t s_event = {
     INIT_ER_EVENT(ER_EVENT_TYPE__SENSOR_DATA, &g_sensor_data_publisher_module),
@@ -32,8 +33,10 @@ void SensorDataPublisher_Init(void)
     srand(time(NULL));
 }
 
-ErEventHandlerRet_t SensorDataPublisher_EventHandler(ErEvent_t *a_event)
+ErEventHandlerRet_t SensorDataPublisher_EventHandler(ErEvent_t *a_event,
+                                                     void *a_context)
 {
+    ER_UNUSED(a_context);
     ErEventHandlerRet_t result = ER_EVENT_HANDLER_RET__HANDLED;
 
     switch (a_event->m_type)
