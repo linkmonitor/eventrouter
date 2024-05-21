@@ -1,11 +1,13 @@
 #ifndef MOCK_MODULE_H
 #define MOCK_MODULE_H
 
+#include <sys/_types/_null.h>
 #ifndef __cplusplus
 #error "This module only supports C++"
 #endif
 
 #include "eventrouter.h"
+#include "eventrouter/internal/defs.h"
 
 /// This struct lets tests create and reference mock modules using integers.
 /// Each integer results in a different instantiation of the module type.
@@ -39,8 +41,9 @@ struct MockModule
         m_module.m_handler = EventHandler;
     }
 
-    static ErEventHandlerRet_t EventHandler(ErEvent_t *a_event)
+    static ErEventHandlerRet_t EventHandler(ErEvent_t *a_event, void *a_context)
     {
+        ER_UNUSED(a_context);
         m_last_event_handled = a_event;
         return m_event_handler_ret;
     }
@@ -56,7 +59,7 @@ ErEvent_t *MockModule<N>::m_last_event_handled = nullptr;
 
 template <int N>
 ErModule_t MockModule<N>::m_module =
-    ER_CREATE_MODULE(MockModule<N>::EventHandler);
+    ER_CREATE_MODULE(MockModule<N>::EventHandler, NULL);
 
 template <int N>
 ErEventHandlerRet_t MockModule<N>::m_event_handler_ret =

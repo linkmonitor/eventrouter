@@ -20,6 +20,7 @@ extern "C"
     typedef struct
     {
         ErEventHandler_t m_handler;  /// Where events are delivered/returned.
+        void *m_context;  /// Passed to `m_handler` when an event is delivered.
 
         // Implementation details.
         size_t m_task_idx;
@@ -30,10 +31,10 @@ extern "C"
 
     /// Used to initialize `ErModule_t` definitions while avoiding
     /// missing-field-initializers warnings.
-#define ER_CREATE_MODULE(a_handler)                                 \
-    {                                                               \
-        .m_handler = a_handler, .m_task_idx = 0, .m_module_idx = 0, \
-        .m_subscriptions = {0},                                     \
+#define ER_CREATE_MODULE(a_handler, a_context)                           \
+    {                                                                    \
+        .m_handler = a_handler, .m_context = a_context, .m_task_idx = 0, \
+        .m_module_idx = 0, .m_subscriptions = {0},                       \
     }
 
 #ifdef __cplusplus
