@@ -1,13 +1,11 @@
 #ifndef MOCK_MODULE_H
 #define MOCK_MODULE_H
 
-#include <sys/_types/_null.h>
 #ifndef __cplusplus
 #error "This module only supports C++"
 #endif
 
 #include "eventrouter.h"
-#include "eventrouter/internal/defs.h"
 
 /// This struct lets tests create and reference mock modules using integers.
 /// Each integer results in a different instantiation of the module type.
