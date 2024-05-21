@@ -17,25 +17,35 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS true)
 project(cmake-extras)
 
 include(cmake/repository_root.cmake)
-include(cmake/freertos.cmake)
 include(cmake/googletest.cmake)
 
 #===============================================================================
-# Build implementation-specific eventrouter libs; used by examples and tests.
+# Select implementation.
+#===============================================================================
+
+set(IMPLEMENTATION "baremetal" CACHE STRING "Select the implementation to build")
+set(ALLOWED_IMPLEMENTATIONS "baremetal;freertos;posix")
+set_property(CACHE IMPLEMENTATION PROPERTY STRINGS ${ALLOWED_IMPLEMENTATIONS})
+if(NOT IMPLEMENTATION IN_LIST ALLOWED_IMPLEMENTATIONS)
+    message(FATAL_ERROR "IMPLEMENTATION must be one of: ${ALLOWED_IMPLEMENTATIONS}")
+endif()
+
+#===============================================================================
+# Build the eventrouter library; used by examples and tests.
 # ===============================================================================
 
-add_library(baremetal_eventrouter STATIC ${REPOSITORY_ROOT}/eventrouter.c)
-target_include_directories(baremetal_eventrouter PUBLIC ${REPOSITORY_ROOT}  .)
-target_compile_definitions(baremetal_eventrouter PUBLIC -DER_BAREMETAL)
+add_library(eventrouter STATIC ${REPOSITORY_ROOT}/eventrouter.c)
+target_include_directories(eventrouter PUBLIC ${REPOSITORY_ROOT} .)
 
-add_library(freertos_eventrouter STATIC ${REPOSITORY_ROOT}/eventrouter.c)
-target_include_directories(freertos_eventrouter PUBLIC ${REPOSITORY_ROOT} .)
-target_link_libraries(freertos_eventrouter PUBLIC freertos_kernel)
-target_compile_definitions(freertos_eventrouter PUBLIC -DER_FREERTOS)
-
-add_library(posix_eventrouter STATIC ${REPOSITORY_ROOT}/eventrouter.c)
-target_include_directories(posix_eventrouter PUBLIC ${REPOSITORY_ROOT} .)
-target_compile_definitions(posix_eventrouter PUBLIC -DER_POSIX)
+if(IMPLEMENTATION STREQUAL "baremetal")
+    target_compile_definitions(eventrouter PUBLIC -DER_BAREMETAL)
+elseif(IMPLEMENTATION STREQUAL "freertos")
+    include(cmake/freertos.cmake)
+    target_link_libraries(eventrouter PUBLIC freertos_kernel)
+    target_compile_definitions(eventrouter PUBLIC -DER_FREERTOS)
+elseif(IMPLEMENTATION STREQUAL "posix")
+    target_compile_definitions(eventrouter PUBLIC -DER_POSIX)
+endif()
 
 #===============================================================================
 # Build tests and example applications
