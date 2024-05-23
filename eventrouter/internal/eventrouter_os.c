@@ -633,8 +633,8 @@ void ErReturnToSender(ErEvent_t *a_event)
     // support the optimization mentioned a few lines up.
     if (atomic_load(&a_event->m_reference_count) == 0)
     {
-        a_event->m_sending_module->m_handler(
-            a_event, a_event->m_sending_module->m_context);
+        ErModule_t *sender = a_event->m_sending_module;
+        sender->m_handler(a_event, sender->m_context);
     }
 }
 

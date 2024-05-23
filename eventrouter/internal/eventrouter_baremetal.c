@@ -176,8 +176,8 @@ void ErReturnToSender(ErEvent_t *a_event)
         ErListRemove(&s_context.m_events.m_kept, &a_event->m_next);
 
         // All subscribed modules have received the event; return to its sender.
-        a_event->m_sending_module->m_handler(
-            a_event, a_event->m_sending_module->m_context);
+        ErModule_t *sender = a_event->m_sending_module;
+        sender->m_handler(a_event, sender->m_context);
     }
 }
 
