@@ -90,9 +90,7 @@ static void DefaultSendEvent(ErQueueHandle_t a_queue, void *a_event)
     }
     else
     {
-        ER_ASSERT_E(
-            pdTRUE == xQueueSendToBack(a_queue, &a_event, portMAX_DELAY),
-            a_event);
+        ER_ASSERT_E(pdTRUE == xQueueSendToBack(a_queue, &a_event, 0), a_event);
     }
 }
 
