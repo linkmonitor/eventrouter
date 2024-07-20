@@ -11,6 +11,7 @@
 #include "defs.h"
 #include "os_functions.h"
 #include "queue_.h"
+#include "yo_portable/yo_log.h"
 
 //==============================================================================
 // Macros and Defines
@@ -544,9 +545,23 @@ void ErCallHandlers(ErEvent_t *a_event)
 
         if (module_is_subscribed)
         {
+            extern void YoLogConsoleOnly(const char *a_log_msg, ...);
+
+            if (a_event->m_type == 0)
+            {
+                YoLogConsoleOnly("[ER start] module->m_handler = %p",
+                                 module->m_handler);
+            }
+
             // Deliver the event to the subscribed module.
             const ErEventHandlerRet_t ret =
                 module->m_handler(a_event, module->m_context);
+
+            if (a_event->m_type == 0)
+            {
+                YoLogConsoleOnly("[ER end] module->m_handler = %p",
+                                 module->m_handler);
+            }
 
             if (ret == ER_EVENT_HANDLER_RET__KEPT)
             {
